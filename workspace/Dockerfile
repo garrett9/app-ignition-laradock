@@ -1650,6 +1650,40 @@ RUN if [ ${SHELL_OH_MY_ZSH} = true ]; then \
 
 USER root
 
+###########################################################################
+# Fish Shell
+###########################################################################
+
+USER root
+
+ARG SHELL_FISH=true
+RUN if [ ${SHELL_FISH} = true ]; then \
+  apt update && \
+  apt-get -y install fish wget && \
+  chsh -s /bin/fish laradock \
+;fi
+
+USER laradock
+
+COPY ./aliases.sh /home/laradock/aliases.sh
+
+RUN if [ ${SHELL_FISH} = true ]; then \
+  # Install fish_ssh_agent
+  mkdir -p /home/laradock/.config/fish/functions && \
+  wget https://gitlab.com/kyb/fish_ssh_agent/raw/master/functions/fish_ssh_agent.fish -P /home/laradock/.config/fish/functions && \
+  echo "fish_ssh_agent" > /home/laradock/.config/fish/config.fish && \
+  # Install bass to run bash commands through fish and setup our aliases
+  cd ~ && \
+  git clone https://github.com/edc/bass && \
+  cd bass && \
+  make install && \
+  cd .. && \
+  rm -rf bass && \
+  # Setup aliases
+  sed -i 's/\r//' /home/laradock/aliases.sh && \
+  chown laradock:laradock /home/laradock/aliases.sh && \
+  echo "bass source ~/aliases.sh" >> /home/laradock/.config/fish/config.fish \
+;fi
 
 ###########################################################################
 # PHP DECIMAL:
@@ -1821,6 +1855,11 @@ USER root
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     rm /var/log/lastlog /var/log/faillog
+
+USER laradock
+RUN git config --global --add safe.directory /var/www
+
+USER root
 
 # Set default work directory
 WORKDIR /var/www
