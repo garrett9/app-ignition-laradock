@@ -1,0 +1,21 @@
+# DO NOT REMOVE!!
+# This file is needed by LaraConcierge to properly handle new app installations.
+
+<VirtualHost *:80>
+  ServerName {APP_DOMAIN}
+  DocumentRoot /var/www/{APP_NAME}
+  Options Indexes FollowSymLinks
+
+  <Directory "/var/www/{APP_NAME}">
+    AllowOverride All
+    <IfVersion < 2.4>
+      Allow from all
+    </IfVersion>
+    <IfVersion >= 2.4>
+      Require all granted
+    </IfVersion>
+  </Directory>
+
+  ErrorLog /var/log/apache2/error.log
+  CustomLog /var/log/apache2/access.log combined
+</VirtualHost>
