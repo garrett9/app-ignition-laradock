@@ -1863,4 +1863,5 @@ USER root
 
 # Set default work directory
 WORKDIR /var/www
-RUN chown laradock:laradock -R /var/www
+
+CMD ["chown laradock:laradock -R /var/www"]
