@@ -1863,5 +1863,6 @@ USER root
 
 # Set default work directory
 WORKDIR /var/www
+COPY entrypoint.sh /entrypoint.sh
 
-CMD ["chown laradock:laradock -R /var/www"]
+ENTRYPOINT ["/entrypoint.sh"]
