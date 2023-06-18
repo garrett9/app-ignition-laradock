@@ -1,5 +1,5 @@
 # DO NOT REMOVE!!
-# This file is needed by LaraConcierge to properly handle new app installations.
+# This file is needed by AppIgnition to properly handle new app installations.
 
 server {
 
