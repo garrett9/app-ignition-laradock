@@ -1146,8 +1146,12 @@ services:
 ### Selenium ###############################################
     selenium:
       build: ./selenium
+      environment:
+        - VNC_NO_PASSWORD=1
+        - SE_START_VNC=true
       ports:
         - "${SELENIUM_PORT}:4444"
+        - "${SELENIUM_NO_VNC_PORT}:7900"
       volumes:
         - /dev/shm:/dev/shm
       networks:
@@ -1156,6 +1160,9 @@ services:
 ### Seleniarm ###############################################
     seleniarm:
       build: ./seleniarm
+      environment:
+        - VNC_NO_PASSWORD=1
+        - SE_START_VNC=true
       ports:
         - "${SELENIARM_PORT}:4444"
       volumes:
