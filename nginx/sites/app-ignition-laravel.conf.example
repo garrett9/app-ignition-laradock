@@ -13,7 +13,7 @@ server {
     # ssl_certificate_key /etc/nginx/ssl/default.key;
 
     server_name {APP_DOMAIN};
-    root /var/www/{APP_NAME}/public;
+    root "/var/www/{APP_NAME}/public";
     index index.php index.html index.htm;
 
     location / {

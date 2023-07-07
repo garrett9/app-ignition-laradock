@@ -3,7 +3,7 @@
 
 <VirtualHost *:80>
   ServerName {APP_DOMAIN}
-  DocumentRoot /var/www/{APP_NAME}
+  DocumentRoot "/var/www/{APP_NAME}"
   Options Indexes FollowSymLinks
 
   <Directory "/var/www/{APP_NAME}">

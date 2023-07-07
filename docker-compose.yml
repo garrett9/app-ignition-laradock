@@ -1165,6 +1165,7 @@ services:
         - SE_START_VNC=true
       ports:
         - "${SELENIARM_PORT}:4444"
+        - "${SELENIARM_NO_VNC_PORT}:7900"
       volumes:
         - /dev/shm:/dev/shm
       networks:
