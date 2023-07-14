@@ -3,6 +3,6 @@ process_name=%(program_name)s_%(process_num)02d
 command=php /var/www/{APP_NAME}/artisan queue:work --sleep=3 --tries=3
 autostart=true
 autorestart=true
-numprocs=8
+numprocs=2
 user=laradock
 redirect_stderr=true
