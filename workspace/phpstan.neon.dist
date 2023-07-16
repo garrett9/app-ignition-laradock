@@ -6,6 +6,7 @@ parameters:
     paths:
         - app
         - config
-        - database
     tmpDir: build/phpstan
     checkModelProperties: true
+    treatPhpDocTypesAsCertain: false
+    tipsOfTheDay: true
