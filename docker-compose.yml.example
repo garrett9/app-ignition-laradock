@@ -435,7 +435,7 @@ services:
       networks:
         frontend:
           aliases:
-            - blog.test
+            - app1.test
             - app2.test
             - app3.test
             - app4.test
@@ -508,7 +508,7 @@ services:
       networks:
         frontend:
           aliases:
-            - blog.test
+            - app1.test
             - app2.test
             - app3.test
             - app4.test
