@@ -147,7 +147,6 @@ services:
           - INSTALL_XMLRPC=${WORKSPACE_INSTALL_XMLRPC}
           - PUID=${WORKSPACE_PUID}
           - PGID=${WORKSPACE_PGID}
-          - CHROME_DRIVER_VERSION=${WORKSPACE_CHROME_DRIVER_VERSION}
           - NODE_VERSION=${WORKSPACE_NODE_VERSION}
           - YARN_VERSION=${WORKSPACE_YARN_VERSION}
           - DRUSH_VERSION=${WORKSPACE_DRUSH_VERSION}
@@ -981,6 +980,9 @@ services:
     phpmyadmin:
       build: ./phpmyadmin
       environment:
+        - PMA_USER=root
+        - PMA_HOST=mysql
+        - PMA_PASSWORD=${PMA_ROOT_PASSWORD}
         - PMA_ARBITRARY=1
         - MYSQL_USER=${PMA_USER}
         - MYSQL_PASSWORD=${PMA_PASSWORD}
@@ -1006,6 +1008,7 @@ services:
           - ADMINER_PLUGINS=${ADM_PLUGINS}
           - ADMINER_DESIGN=${ADM_DESIGN}
           - ADMINER_DEFAULT_SERVER=${ADM_DEFAULT_SERVER}
+          - ADMINER_DEFAULT_DB_DRIVER=${ADMINER_DEFAULT_DB_DRIVER}
       ports:
         - "${ADM_PORT}:8080"
       depends_on:

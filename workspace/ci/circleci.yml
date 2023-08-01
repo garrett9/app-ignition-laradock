@@ -1,0 +1,145 @@
+version: 2.1
+
+jobs:
+  ci:
+    machine: # executor type
+      image: ubuntu-2004:current
+
+    parameters:
+      run_pint:
+        type: boolean
+        default: false
+      run_phpstan:
+        type: boolean
+        default: false
+      setup_mysql:
+        type: boolean
+        default: false
+      run_dusk:
+        type: boolean
+        default: false
+
+    steps:
+      - checkout:
+          path: {APP_PATH}
+
+      - run:
+          name: Checkout Containers
+          command: |
+            git clone --depth 1 https://github.com/garrett9/app-ignition-laradock.git app-ignition-laradock
+
+      - run:
+          name: Copy Apache Config
+          command: |
+            cd app-ignition-laradock/apache2/sites
+            cp app-ignition-laravel.conf.example {APP_PATH}.conf
+            sed -i 's/{APP_DOMAIN}/{HOST_NAME}/g' {APP_PATH}.conf
+            sed -i 's/{APP_NAME}/{APP_PATH}/g' {APP_PATH}.conf
+
+      - run:
+          name: Copy Nginx Config
+          command: |
+            cd app-ignition-laradock/nginx/sites
+            cp app-ignition-laravel.conf.example {APP_PATH}.conf
+            sed -i 's/{APP_DOMAIN}/{HOST_NAME}/g' {APP_PATH}.conf
+            sed -i 's/{APP_NAME}/{APP_PATH}/g' {APP_PATH}.conf
+
+      - run:
+          name: Build Containers
+          command: |
+            cd app-ignition-laradock
+            cp ../{APP_PATH}/.app-ignition/.env.app-ignition .env
+            docker-compose build {CONTAINERS}
+            docker-compose up -d {CONTAINERS}
+
+      - run:
+          name: Install Composer Dependencies
+          command: |
+            cd app-ignition-laradock
+            docker-compose exec --user=root -w "/var/www/{APP_PATH}" workspace composer install
+
+      - when:
+          condition:
+            equal: [true, << parameters.run_pint >>]
+          steps:
+          - run:
+              name: Run Pint
+              command: |
+                cd app-ignition-laradock
+                docker-compose exec --user=root -w "/var/www/{APP_PATH}" workspace ./vendor/bin/pint
+
+          - run:
+              name: Commit Pint Changes
+              command: |
+                cd {APP_PATH}
+                git config user.email "circleci@circleci.com"
+                git config user.name "CircleCI"
+                git add -A
+                git commit -m "Fix styling" || true
+                git push origin main || true
+
+      - when:
+          condition:
+            equal: [true, << parameters.run_phpstan >>]
+          steps:
+          - run:
+              name: Run PHPStan
+              command: |
+                cd app-ignition-laradock
+                docker-compose exec --user=root -w "/var/www/{APP_PATH}" workspace ./vendor/bin/phpstan analyze
+
+      - when:
+          condition:
+            equal: [true, << parameters.setup_mysql >>]
+          steps:
+          - run:
+              name: Setup MySQL Databases
+              command: |
+                cd app-ignition-laradock
+                docker-compose exec --user=root -w "/var/www/app-ignition-laradock" workspace mysql -h mysql -u root --password="{MYSQL_PASSWORD}" -Bse "{MYSQL_COMMANDS}"
+
+      - run:
+          name: Run Feature & Unit Tests
+          command: |
+            cd app-ignition-laradock
+            docker-compose exec --user=root -w "/var/www/{APP_PATH}" workspace php artisan test
+
+      - when:
+          condition:
+            equal: [true, << parameters.run_dusk >>]
+          steps:
+          - run:
+              name: Add hosts to /etc/hosts
+              command: |
+                sudo echo "127.0.0.1 {HOST_NAME}" | sudo tee -a /etc/hosts
+
+          - run:
+              name: Install NPM Dependencies
+              command: |
+                cd app-ignition-laradock
+                docker-compose exec --user=root -w "/var/www/{APP_PATH}" workspace npm ci
+
+          - run:
+              name: Configure Initial Env for Dusk
+              command: |
+                echo "APP_ENV=local" | tee -a {APP_PATH}/.env
+
+          - run:
+              name: Run Dusk Tests
+              command: |
+                cd app-ignition-laradock
+                docker-compose exec --user=root -w "/var/www/{APP_PATH}" workspace php artisan dusk --without-tty
+
+          - store_artifacts:
+              path: {APP_PATH}/tests/Browser/screenshots
+              destination: screenshots
+
+workflows:
+  version: 2.2.0
+  ci_workflow:
+    jobs:
+      - ci:
+          run_pint: {RUN_PINT}
+          run_phpstan: {RUN_PHPSTAN}
+          setup_mysql: {SETUP_MYSQL}
+          run_dusk: {RUN_DUSK}

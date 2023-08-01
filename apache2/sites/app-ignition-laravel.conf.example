@@ -3,10 +3,10 @@
 
 <VirtualHost *:80>
   ServerName {APP_DOMAIN}
-  DocumentRoot "/var/www/{APP_NAME}"
+  DocumentRoot "/var/www/{APP_NAME}/public"
   Options Indexes FollowSymLinks
 
-  <Directory "/var/www/{APP_NAME}">
+  <Directory "/var/www/{APP_NAME}/public">
     AllowOverride All
     <IfVersion < 2.4>
       Allow from all

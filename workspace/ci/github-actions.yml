@@ -1,0 +1,123 @@
+name: App Ignition
+
+on:
+  push:
+    branches: [{BRANCHES}]
+  pull_request:
+    branches: [{BRANCHES}]
+
+jobs:
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the changed files back to the repository.
+      contents: write
+
+    steps:
+      - name: Checkout App
+        uses: actions/checkout@v3
+        with:
+          path: {APP_PATH}
+
+      - name: Checkout Containers
+        uses: actions/checkout@v3
+        with:
+          repository: garrett9/app-ignition-laradock
+          path: app-ignition-laradock
+
+      - name: Copy Apache Config
+        run: |
+          cd app-ignition-laradock/apache2/sites
+          cp app-ignition-laravel.conf.example {APP_PATH}.conf
+          sed -i 's/{APP_DOMAIN}/{HOST_NAME}/g' {APP_PATH}.conf
+          sed -i 's/{APP_NAME}/{APP_PATH}/g' {APP_PATH}.conf
+
+      - name: Copy Nginx Config
+        run: |
+          cd app-ignition-laradock/nginx/sites
+          cp app-ignition-laravel.conf.example {APP_PATH}.conf
+          sed -i 's/{APP_DOMAIN}/{HOST_NAME}/g' {APP_PATH}.conf
+          sed -i 's/{APP_NAME}/{APP_PATH}/g' {APP_PATH}.conf
+
+      - name: Build containers
+        run: |
+          cd app-ignition-laradock
+          cp ../{APP_PATH}/.app-ignition/.env.app-ignition .env
+          docker compose build {CONTAINERS}
+          docker compose up -d {CONTAINERS}
+
+      - name: Install Composer Dependencies
+        id: installDeps
+        run: |
+          cd app-ignition-laradock
+          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace composer install
+
+      - name: Run Pint
+        id: pint
+        if: ${{ !cancelled() }} && {RUN_PINT} && steps.installDeps.outcome == 'success'
+        run: |
+          cd app-ignition-laradock
+          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace ./vendor/bin/pint
+
+      - name: Commit Pint Changes
+        if: ${{ !cancelled() }} && steps.pint.outcome == 'success'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Fix styling
+          repository: {APP_PATH}
+
+      - name: Run PHPStan
+        if: ${{ !cancelled() }} && {RUN_PHPSTAN} && steps.installDeps.outcome == 'success'
+        run: |
+          cd app-ignition-laradock
+          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace ./vendor/bin/phpstan analyze
+
+      - name: Setup MySQL Databases
+        if: ${{ !cancelled() }} && {SETUP_MYSQL} && steps.installDeps.outcome == 'success'
+        run: |
+          cd app-ignition-laradock
+          docker compose exec --user=root -w "/var/www/app-ignition-laradock" workspace mysql -h mysql -u root --password="{MYSQL_PASSWORD}" -Bse "{MYSQL_COMMANDS}"
+
+      - name: Run Feature & Unit Tests
+        if: ${{ !cancelled() }} && steps.installDeps.outcome == 'success'
+        run: |
+          cd app-ignition-laradock
+          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace php artisan test
+
+      - name: Add hosts to /etc/hosts
+        id: hosts
+        if: ${{ !cancelled() }} && {RUN_DUSK} && steps.installDeps.outcome == 'success'
+        run: sudo echo "127.0.0.1 {HOST_NAME}" | sudo tee -a /etc/hosts
+
+      - name: Install NPM Dependencies
+        id: npm
+        if: ${{ !cancelled() }} && steps.hosts.outcome == 'success'
+        run: |
+          cd app-ignition-laradock
+          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace npm ci
+
+      - name: Configure Initial Env for Dusk
+        id: env
+        if: ${{ !cancelled() }} && steps.npm.outcome == 'success'
+        uses: DamianReeves/write-file-action@master
+        with:
+          path: {APP_PATH}/.env
+          contents: |
+            APP_ENV=local
+          write-mode: append
+
+      - name: Run Dusk Tests
+        id: dusk
+        if: ${{ !cancelled() }} && steps.env.outcome == 'success'
+        run: |
+          cd app-ignition-laradock
+          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace php artisan dusk --without-tty
+
+      - name: Upload Screenshots
+        if: ${{ !cancelled() }} && steps.dusk.outcome == 'success'
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshots
+          path: {APP_PATH}/tests/Browser/screenshots
