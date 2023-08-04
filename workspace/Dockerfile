@@ -18,6 +18,14 @@ FROM laradock/workspace:${BASE_IMAGE_TAG_PREFIX}-${LARADOCK_PHP_VERSION}
 
 LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
 
+LABEL devcontainer.metadata='[{ \
+  "name": "AppIgnition", \
+  "dockerComposeFile": "../docker-compose.yml", \
+  "remoteUser": "laradock", \
+  "service": "workspace", \
+  "workspaceFolder": "/var/www" \
+}]'
+
 ARG LARADOCK_PHP_VERSION
 
 # Set Environment Variables

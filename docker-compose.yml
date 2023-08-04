@@ -434,8 +434,8 @@ services:
       networks:
         frontend:
           aliases:
-            - blog.test
-            - app-ignition-backend.test
+            - app1.test
+            - app2.test
             - app3.test
             - app4.test
             - app5.test
@@ -507,8 +507,8 @@ services:
       networks:
         frontend:
           aliases:
-            - blog.test
-            - app-ignition-backend.test
+            - app-ignition-api.test
+            - app2.test
             - app3.test
             - app4.test
             - app5.test
