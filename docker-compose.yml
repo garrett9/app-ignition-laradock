@@ -434,7 +434,7 @@ services:
       networks:
         frontend:
           aliases:
-            - app1.test
+            - app-ignition-api.test
             - app2.test
             - app3.test
             - app4.test
