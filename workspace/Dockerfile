@@ -1668,6 +1668,21 @@ RUN if [ ${SHELL_FISH} = true ]; then \
 ;fi
 
 ###########################################################################
+# STRIPE_CLI
+###########################################################################
+
+USER root
+
+ARG INSTALL_STRIPE_CLI=false
+
+RUN if [ ${INSTALL_STRIPE_CLI} = true ]; then \
+  curl -s https://packages.stripe.dev/api/security/keypair/stripe-cli-gpg/public | gpg --dearmor | tee /usr/share/keyrings/stripe.gpg && \
+  echo "deb [signed-by=/usr/share/keyrings/stripe.gpg] https://packages.stripe.dev/stripe-cli-debian-local stable main" | tee -a /etc/apt/sources.list.d/stripe.list && \
+  apt update && \
+  apt install stripe \
+;fi
+
+###########################################################################
 # PHP DECIMAL:
 ###########################################################################
 
