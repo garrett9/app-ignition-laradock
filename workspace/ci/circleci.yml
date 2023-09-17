@@ -26,6 +26,12 @@ jobs:
       code_coverage:
         type: boolean
         default: false
+      use_nginx:
+        type: boolean
+        default: false
+      web_server:
+        type: string
+        default: ''
 
     environment:
       APP_PATH: << parameters.app_path >>
@@ -46,21 +52,29 @@ jobs:
           command: |
             git clone --depth 1 https://github.com/garrett9/app-ignition-laradock.git app-ignition-laradock
 
-      - run:
-          name: Copy Apache Config
-          command: |
-            cd app-ignition-laradock/apache2/sites
-            cp app-ignition-laravel.conf.example $APP_PATH.conf
-            sed -i 's/{APP_DOMAIN}/$HOST_NAME/g' $APP_PATH.conf
-            sed -i 's/{APP_NAME}/$APP_PATH/g' $APP_PATH.conf
+      - when:
+          condition:
+            equal: ['nginx', << parameters.web_server >>]
+          steps:
+            - run:
+                name: Copy Nginx Config
+                command: |
+                  cd app-ignition-laradock/nginx/sites
+                  cp app-ignition-laravel.conf.example $APP_PATH.conf
+                  sed -i 's/{APP_DOMAIN}/'"$HOST_NAME"'/g' $APP_PATH.conf
+                  sed -i 's/{APP_NAME}/'"$APP_PATH"'/g' $APP_PATH.conf
 
-      - run:
-          name: Copy Nginx Config
-          command: |
-            cd app-ignition-laradock/nginx/sites
-            cp app-ignition-laravel.conf.example $APP_PATH.conf
-            sed -i 's/{APP_DOMAIN}/$HOST_NAME/g' $APP_PATH.conf
-            sed -i 's/{APP_NAME}/$APP_PATH/g' $APP_PATH.conf
+      - when:
+          condition:
+            equal: ['apache', << parameters.web_server >>]
+          steps:
+            - run:
+                name: Copy Apache Config
+                command: |
+                  cd app-ignition-laradock/apache2/sites
+                  cp app-ignition-laravel.conf.example $APP_PATH.conf
+                  sed -i 's/{APP_DOMAIN}/'"$HOST_NAME"'/g' $APP_PATH.conf
+                  sed -i 's/{APP_NAME}/'"$APP_PATH"'/g' $APP_PATH.conf
 
       - run:
           name: Build Containers
@@ -193,3 +207,4 @@ workflows:
           run_dusk: {RUN_DUSK}
           code_coverage: {CODE_COVERAGE}
           setup_pgsql: {SETUP_PGSQL}
+          web_server: {WEB_SERVER}

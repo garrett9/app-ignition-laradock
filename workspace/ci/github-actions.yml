@@ -15,6 +15,7 @@ env:
   PGSQL_USER: {PGSQL_USER}
   PGSQL_PASSWORD: {PGSQL_PASSWORD}
   DB_NAME: {DATABASE_NAME}
+  WEB_SERVER: {WEB_SERVER}
 
 on:
   push:
@@ -44,18 +45,20 @@ jobs:
           path: app-ignition-laradock
 
       - name: Copy Apache Config
+        if: ${{ env.WEB_SERVER == 'apache' }}
         run: |
           cd app-ignition-laradock/apache2/sites
           cp app-ignition-laravel.conf.example $APP_PATH.conf
-          sed -i 's/{APP_DOMAIN}/$HOST_NAME/g' $APP_PATH.conf
-          sed -i 's/{APP_NAME}/$APP_PATH/g' $APP_PATH.conf
+          sed -i 's/{APP_DOMAIN}/'"$HOST_NAME"'/g' $APP_PATH.conf
+          sed -i 's/{APP_NAME}/'"$APP_PATH"'/g' $APP_PATH.conf
 
       - name: Copy Nginx Config
+        if: ${{ env.WEB_SERVER == 'nginx' }}
         run: |
           cd app-ignition-laradock/nginx/sites
           cp app-ignition-laravel.conf.example $APP_PATH.conf
-          sed -i 's/{APP_DOMAIN}/$HOST_NAME/g' $APP_PATH.conf
-          sed -i 's/{APP_NAME}/$APP_PATH/g' $APP_PATH.conf
+          sed -i 's/{APP_DOMAIN}/'"$HOST_NAME"'/g' $APP_PATH.conf
+          sed -i 's/{APP_NAME}/'"$APP_PATH"'/g' $APP_PATH.conf
 
       - name: Build containers
         run: |
@@ -134,7 +137,7 @@ jobs:
         if: ${{ env.RUN_DUSK == 'true' }}
         uses: DamianReeves/write-file-action@master
         with:
-          path: $APP_PATH/.env
+          path: ${{ format('{0}/{1}', env.APP_PATH, '.env') }}
           contents: |
             APP_ENV=local
           write-mode: append
