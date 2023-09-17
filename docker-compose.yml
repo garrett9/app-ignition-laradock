@@ -58,6 +58,7 @@ services:
       build:
         context: ./workspace
         args:
+          - INSTALL_STRIPE_CLI=${INSTALL_STRIPE_CLI}
           - CHANGE_SOURCE=${CHANGE_SOURCE}
           - SHELL_OH_MY_ZSH=${SHELL_OH_MY_ZSH}
           - SHELL_OH_MY_ZSH_AUTOSUGESTIONS=${SHELL_OH_MY_ZSH_AUTOSUGESTIONS}
@@ -434,16 +435,16 @@ services:
       networks:
         frontend:
           aliases:
-            - app1.test
-            - app2.test
-            - app3.test
-            - app4.test
-            - app5.test
-            - app6.test
-            - app7.test
-            - app8.test
-            - app9.test
-            - app10.test
+            - ${APP1_DOMAIN}
+            - ${APP2_DOMAIN}
+            - ${APP3_DOMAIN}
+            - ${APP4_DOMAIN}
+            - ${APP5_DOMAIN}
+            - ${APP6_DOMAIN}
+            - ${APP7_DOMAIN}
+            - ${APP8_DOMAIN}
+            - ${APP9_DOMAIN}
+            - ${APP10_DOMAIN}
         backend:
 
 ### OpenResty Server #########################################
@@ -507,16 +508,16 @@ services:
       networks:
         frontend:
           aliases:
-            - app-ignition-api.test
-            - app2.test
-            - app3.test
-            - app4.test
-            - app5.test
-            - app6.test
-            - app7.test
-            - app8.test
-            - app9.test
-            - app10.test
+            - ${APP1_DOMAIN}
+            - ${APP2_DOMAIN}
+            - ${APP3_DOMAIN}
+            - ${APP4_DOMAIN}
+            - ${APP5_DOMAIN}
+            - ${APP6_DOMAIN}
+            - ${APP7_DOMAIN}
+            - ${APP8_DOMAIN}
+            - ${APP9_DOMAIN}
+            - ${APP10_DOMAIN}
         backend:
 
 ### HHVM #################################################

@@ -1,5 +1,21 @@
 name: App Ignition
 
+env:
+  CODE_COVERAGE: {CODE_COVERAGE}
+  MIN_CODE_COVERAGE: {MIN_CODE_COVERAGE}
+  APP_PATH: {APP_PATH}
+  HOST_NAME: {HOST_NAME}
+  CONTAINERS: {CONTAINERS}
+  RUN_PINT: {RUN_PINT}
+  RUN_PHPSTAN: {RUN_PHPSTAN}
+  SETUP_MYSQL: {SETUP_MYSQL}
+  SETUP_PGSQL: {SETUP_PGSQL}
+  RUN_DUSK: {RUN_DUSK}
+  MYSQL_PASSWORD: {MYSQL_PASSWORD}
+  PGSQL_USER: {PGSQL_USER}
+  PGSQL_PASSWORD: {PGSQL_PASSWORD}
+  DB_NAME: {DATABASE_NAME}
+
 on:
   push:
     branches: [{BRANCHES}]
@@ -19,7 +35,7 @@ jobs:
       - name: Checkout App
         uses: actions/checkout@v3
         with:
-          path: {APP_PATH}
+          path: ${{ env.APP_PATH }}
 
       - name: Checkout Containers
         uses: actions/checkout@v3
@@ -30,94 +46,109 @@ jobs:
       - name: Copy Apache Config
         run: |
           cd app-ignition-laradock/apache2/sites
-          cp app-ignition-laravel.conf.example {APP_PATH}.conf
-          sed -i 's/{APP_DOMAIN}/{HOST_NAME}/g' {APP_PATH}.conf
-          sed -i 's/{APP_NAME}/{APP_PATH}/g' {APP_PATH}.conf
+          cp app-ignition-laravel.conf.example $APP_PATH.conf
+          sed -i 's/{APP_DOMAIN}/$HOST_NAME/g' $APP_PATH.conf
+          sed -i 's/{APP_NAME}/$APP_PATH/g' $APP_PATH.conf
 
       - name: Copy Nginx Config
         run: |
           cd app-ignition-laradock/nginx/sites
-          cp app-ignition-laravel.conf.example {APP_PATH}.conf
-          sed -i 's/{APP_DOMAIN}/{HOST_NAME}/g' {APP_PATH}.conf
-          sed -i 's/{APP_NAME}/{APP_PATH}/g' {APP_PATH}.conf
+          cp app-ignition-laravel.conf.example $APP_PATH.conf
+          sed -i 's/{APP_DOMAIN}/$HOST_NAME/g' $APP_PATH.conf
+          sed -i 's/{APP_NAME}/$APP_PATH/g' $APP_PATH.conf
 
       - name: Build containers
         run: |
           cd app-ignition-laradock
-          cp ../{APP_PATH}/.app-ignition/.env.app-ignition .env
-          docker compose build {CONTAINERS}
-          docker compose up -d {CONTAINERS}
+          cp ../$APP_PATH/.app-ignition/.env.app-ignition .env
+          docker compose build $CONTAINERS
+          docker compose up -d $CONTAINERS
 
       - name: Install Composer Dependencies
-        id: installDeps
         run: |
           cd app-ignition-laradock
-          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace composer install
+          docker compose exec --user=root -w "/var/www/$APP_PATH" workspace composer install
 
       - name: Run Pint
         id: pint
-        if: ${{ !cancelled() }} && {RUN_PINT} && steps.installDeps.outcome == 'success'
+        if: ${{ env.RUN_PINT == 'true' }}
         run: |
           cd app-ignition-laradock
-          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace ./vendor/bin/pint
+          docker compose exec --user=root -w "/var/www/$APP_PATH" workspace ./vendor/bin/pint
 
       - name: Commit Pint Changes
-        if: ${{ !cancelled() }} && steps.pint.outcome == 'success'
+        if: ${{ env.RUN_PINT == 'true' }}
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Fix styling
-          repository: {APP_PATH}
+          repository: ${{ env.APP_PATH }}
 
       - name: Run PHPStan
-        if: ${{ !cancelled() }} && {RUN_PHPSTAN} && steps.installDeps.outcome == 'success'
+        if: ${{ env.RUN_PHPSTAN == 'true' }}
         run: |
           cd app-ignition-laradock
-          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace ./vendor/bin/phpstan analyze
+          docker compose exec --user=root -w "/var/www/$APP_PATH" workspace ./vendor/bin/phpstan analyze
 
       - name: Setup MySQL Databases
-        if: ${{ !cancelled() }} && {SETUP_MYSQL} && steps.installDeps.outcome == 'success'
+        if: ${{ env.SETUP_MYSQL == 'true' }}
         run: |
           cd app-ignition-laradock
-          docker compose exec --user=root -w "/var/www/app-ignition-laradock" workspace mysql -h mysql -u root --password="{MYSQL_PASSWORD}" -Bse "{MYSQL_COMMANDS}"
+          docker compose exec --user=root -w "/var/www/app-ignition-laradock" workspace mysql -h mysql -u root --password="$MYSQL_PASSWORD" -Bse "CREATE DATABASE IF NOT EXISTS $DB_NAME COLLATE 'utf8_general_ci';"
+          docker compose exec --user=root -w "/var/www/app-ignition-laradock" workspace mysql -h mysql -u root --password="$MYSQL_PASSWORD" -Bse "CREATE DATABASE IF NOT EXISTS ${DB_NAME}_test COLLATE 'utf8_general_ci';"
+          docker compose exec --user=root -w "/var/www/app-ignition-laradock" workspace mysql -h mysql -u root --password="$MYSQL_PASSWORD" -Bse "CREATE DATABASE IF NOT EXISTS ${DB_NAME}_dusk COLLATE 'utf8_general_ci';"
 
-      - name: Run Feature & Unit Tests
-        if: ${{ !cancelled() }} && steps.installDeps.outcome == 'success'
+      - name: Setup Postgres Databases
+        if: ${{ env.SETUP_PGSQL == 'true' }}
         run: |
           cd app-ignition-laradock
-          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace php artisan test
-
-      - name: Add hosts to /etc/hosts
-        id: hosts
-        if: ${{ !cancelled() }} && {RUN_DUSK} && steps.installDeps.outcome == 'success'
-        run: sudo echo "127.0.0.1 {HOST_NAME}" | sudo tee -a /etc/hosts
+          docker compose exec -e PGPASSWORD=$PGSQL_PASSWORD --user=root workspace psql -h postgres -U $PGSQL_USER -c "CREATE DATABASE $DB_NAME;"
+          docker compose exec -e PGPASSWORD=$PGSQL_PASSWORD --user=root workspace psql -h postgres -U $PGSQL_USER -c "CREATE DATABASE ${DB_NAME}_test;"
+          docker compose exec -e PGPASSWORD=$PGSQL_PASSWORD --user=root workspace psql -h postgres -U $PGSQL_USER -c "CREATE DATABASE ${DB_NAME}_dusk;"
 
       - name: Install NPM Dependencies
         id: npm
-        if: ${{ !cancelled() }} && steps.hosts.outcome == 'success'
         run: |
           cd app-ignition-laradock
-          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace npm ci
+          docker compose exec --user=root -w "/var/www/$APP_PATH" workspace npm ci
+          docker compose exec --user=root -w "/var/www/$APP_PATH" workspace npm run build
+
+      - name: Run Feature & Unit Tests
+        if: ${{ env.CODE_COVERAGE == false }}
+        run: |
+          cd app-ignition-laradock
+          docker compose exec --user=root -w "/var/www/$APP_PATH" workspace php artisan test
+
+      - name: Run Feature & Unit Tests with Coverage
+        if: ${{ env.CODE_COVERAGE == 'true' }}
+        run: |
+          cd app-ignition-laradock
+          docker compose exec --user=root -w "/var/www/$APP_PATH" workspace php artisan test --coverage --min=$MIN_CODE_COVERAGE
+
+      - name: Add hosts to /etc/hosts
+        id: hosts
+        if: ${{ env.RUN_DUSK == 'true' }}
+        run: sudo echo "127.0.0.1 $HOST_NAME" | sudo tee -a /etc/hosts
 
       - name: Configure Initial Env for Dusk
         id: env
-        if: ${{ !cancelled() }} && steps.npm.outcome == 'success'
+        if: ${{ env.RUN_DUSK == 'true' }}
         uses: DamianReeves/write-file-action@master
         with:
-          path: {APP_PATH}/.env
+          path: $APP_PATH/.env
           contents: |
             APP_ENV=local
           write-mode: append
 
       - name: Run Dusk Tests
         id: dusk
-        if: ${{ !cancelled() }} && steps.env.outcome == 'success'
+        if: ${{ env.RUN_DUSK == 'true' }}
         run: |
           cd app-ignition-laradock
-          docker compose exec --user=root -w "/var/www/{APP_PATH}" workspace php artisan dusk --without-tty
+          docker compose exec --user=root -w "/var/www/$APP_PATH" workspace php artisan dusk --without-tty
 
       - name: Upload Screenshots
-        if: ${{ !cancelled() }} && steps.dusk.outcome == 'success'
+        if: ${{ env.RUN_DUSK == 'true' && always() }}
         uses: actions/upload-artifact@v3
         with:
           name: screenshots
-          path: {APP_PATH}/tests/Browser/screenshots
+          path: $APP_PATH/tests/Browser/screenshots
