@@ -116,7 +116,7 @@ jobs:
           docker compose exec --user=root -w "/var/www/$APP_PATH" workspace npm run build
 
       - name: Run Feature & Unit Tests
-        if: ${{ env.CODE_COVERAGE == false }}
+        if: ${{ env.CODE_COVERAGE == 'false' }}
         run: |
           cd app-ignition-laradock
           docker compose exec --user=root -w "/var/www/$APP_PATH" workspace php artisan test
