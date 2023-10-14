@@ -22,8 +22,16 @@ LABEL devcontainer.metadata='[{ \
   "name": "AppIgnition", \
   "dockerComposeFile": "../docker-compose.yml", \
   "remoteUser": "laradock", \
+  "containerUser": "laradock", \
   "service": "workspace", \
-  "workspaceFolder": "/var/www" \
+  "workspaceFolder": "/var/www", \
+  "customizations": { \
+    "vscode": { \
+      "extensions": [ \
+        "appignition.appignition-laravel" \
+      ]\
+    } \
+  } \
 }]'
 
 ARG LARADOCK_PHP_VERSION
