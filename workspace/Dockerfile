@@ -27,9 +27,34 @@ LABEL devcontainer.metadata='[{ \
   "workspaceFolder": "/var/www", \
   "customizations": { \
     "vscode": { \
-      "extensions": [ \
-        "appignition.appignition-laravel" \
-      ]\
+      "settings": { \
+        "explorer.confirmDragAndDrop": false, \
+        "explorer.confirmDelete": false, \
+        "editor.tabSize": 2, \
+        "typescript.preferences.importModuleSpecifier": "relative", \
+        "search.exclude": { \
+            "**/output": true \
+        }, \
+        "window.zoomLevel": -2, \
+        "bladeFormatter.format.sortTailwindcssClasses": true, \
+        "bladeFormatter.format.useTabs": true, \
+        "bladeFormatter.format.wrapAttributes": "force-expand-multiline", \
+        "bladeFormatter.format.indentSize": 1, \
+        "editor.defaultFormatter": "open-southeners.laravel-pint", \
+        "editor.formatOnSave": true, \
+        "[blade]": { \
+            "editor.defaultFormatter": "shufo.vscode-blade-formatter" \
+        }, \
+        "search.useParentIgnoreFiles": true, \
+        "laravel-pint.enable": true, \
+        "laravel-pint.configPath": "pint.json", \
+        "editor.codeActionsOnSave": { \
+            "source.fixAll.eslint": true \
+        }, \
+        "extensions": [ \
+          "appignition.appignition-laravel" \
+        ] \
+      } \
     } \
   } \
 }]'
@@ -1662,16 +1687,15 @@ RUN if [ ${SHELL_FISH} = true ]; then \
   mkdir -p /home/laradock/.config/fish/functions && \
   wget https://gitlab.com/kyb/fish_ssh_agent/raw/master/functions/fish_ssh_agent.fish -P /home/laradock/.config/fish/functions && \
   echo "fish_ssh_agent" > /home/laradock/.config/fish/config.fish && \
-  # Install bass to run bash commands through fish and setup our aliases
-  cd ~ && \
-  git clone https://github.com/edc/bass && \
-  cd bass && \
-  make install && \
-  cd .. && \
-  rm -rf bass && \
+  echo "fish_ssh_agent" > /home/laradock/.config/fish/config.fish && \
+  curl -sfL https://git.io/fundle-install | fish && \
+  fish -c "fundle plugin 'FabioAntunes/fish-nvm' && fundle plugin 'edc/bass' && fundle install" && \
   # Setup aliases
   sed -i 's/\r//' /home/laradock/aliases.sh && \
   chown laradock:laradock /home/laradock/aliases.sh && \
+  echo "fundle plugin 'FabioAntunes/fish-nvm'" >> /home/laradock/.config/fish/config.fish && \
+  echo "fundle plugin 'edc/bass'" >> /home/laradock/.config/fish/config.fish && \
+  echo "fundle init" >> /home/laradock/.config/fish/config.fish && \
   echo "bass source ~/aliases.sh" >> /home/laradock/.config/fish/config.fish \
 ;fi
 
@@ -1862,12 +1886,13 @@ RUN apt-get clean && \
     rm /var/log/lastlog /var/log/faillog
 
 USER laradock
-RUN git config --global --add safe.directory /var/www
+RUN git config --global --add safe.directory "*"
+RUN git config --global core.fileMode false
 
 USER root
 
 RUN apt-get update && apt-get install -y acl
-RUN git config --global --add safe.directory /var/www
+RUN git config --global --add safe.directory "*"
 
 # Set default work directory
 WORKDIR /var/www
