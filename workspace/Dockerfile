@@ -50,11 +50,11 @@ LABEL devcontainer.metadata='[{ \
         "laravel-pint.configPath": "pint.json", \
         "editor.codeActionsOnSave": { \
             "source.fixAll.eslint": true \
-        }, \
-        "extensions": [ \
-          "appignition.appignition-laravel" \
-        ] \
-      } \
+        } \
+      }, \
+      "extensions": [ \
+        "appignition.appignition-laravel" \
+      ] \
     } \
   } \
 }]'
