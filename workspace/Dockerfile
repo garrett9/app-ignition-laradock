@@ -50,7 +50,8 @@ LABEL devcontainer.metadata='[{ \
         "laravel-pint.configPath": "pint.json", \
         "editor.codeActionsOnSave": { \
             "source.fixAll.eslint": true \
-        } \
+        }, \
+        "files.saveConflictResolution": "overwriteFileOnDisk" \
       }, \
       "extensions": [ \
         "appignition.appignition-laravel" \
