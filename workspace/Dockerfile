@@ -21,8 +21,8 @@ LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
 LABEL devcontainer.metadata='[{ \
   "name": "AppIgnition", \
   "dockerComposeFile": "../docker-compose.yml", \
-  "remoteUser": "laradock", \
-  "containerUser": "laradock", \
+  "remoteUser": "ignition", \
+  "containerUser": "ignition", \
   "service": "workspace", \
   "workspaceFolder": "/var/www", \
   "customizations": { \
@@ -79,7 +79,7 @@ RUN if [ ${CHANGE_SOURCE} = true ]; then \
   fi;
 
 ###########################################################################
-# Laradock non-root user:
+# ignition non-root user:
 ###########################################################################
 
 # Add a non-root user to prevent files being created with root permissions on host machine.
@@ -92,9 +92,9 @@ ENV PGID ${PGID}
 RUN set -xe; \
     apt-get update -yqq && \
     pecl channel-update pecl.php.net && \
-    groupadd -g ${PGID} laradock && \
-    useradd -l -u ${PUID} -g laradock -m laradock -G docker_env && \
-    usermod -p "*" laradock -s /bin/bash && \
+    groupadd -g ${PGID} ignition && \
+    useradd -l -u ${PUID} -g ignition -m ignition -G docker_env && \
+    usermod -p "*" ignition -s /bin/bash && \
     apt-get install -yqq \
       apt-utils \
       #
@@ -143,17 +143,17 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 USER root
 
 COPY ./aliases.sh /root/aliases.sh
-COPY ./aliases.sh /home/laradock/aliases.sh
+COPY ./aliases.sh /home/ignition/aliases.sh
 
 RUN sed -i 's/\r//' /root/aliases.sh && \
-    sed -i 's/\r//' /home/laradock/aliases.sh && \
-    chown laradock:laradock /home/laradock/aliases.sh && \
+    sed -i 's/\r//' /home/ignition/aliases.sh && \
+    chown ignition:ignition /home/ignition/aliases.sh && \
     echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
     echo "source ~/aliases.sh" >> ~/.bashrc && \
 	  echo "" >> ~/.bashrc
 
-USER laradock
+USER ignition
 
 RUN echo "" >> ~/.bashrc && \
     echo "# Load Custom Aliases" >> ~/.bashrc && \
@@ -167,13 +167,13 @@ RUN echo "" >> ~/.bashrc && \
 USER root
 
 # Add the composer.json
-COPY ./composer.json /home/laradock/.composer/composer.json
+COPY ./composer.json /home/ignition/.composer/composer.json
 
 # Add the auth.json for magento 2 credentials
-COPY ./auth.json /home/laradock/.composer/auth.json
+COPY ./auth.json /home/ignition/.composer/auth.json
 
-# Make sure that ~/.composer belongs to laradock
-RUN chown -R laradock:laradock /home/laradock/.composer
+# Make sure that ~/.composer belongs to ignition
+RUN chown -R ignition:ignition /home/ignition/.composer
 
 # Export composer vendor path
 RUN echo "" >> ~/.bashrc && \
@@ -189,7 +189,7 @@ RUN set -eux; \
           composer self-update ${COMPOSER_VERSION}; \
       fi
 
-USER laradock
+USER ignition
 
 # Check if global install need to be ran
 ARG COMPOSER_GLOBAL_INSTALL=false
@@ -206,7 +206,7 @@ ENV COMPOSER_AUTH_JSON ${COMPOSER_AUTH_JSON}
 
 RUN if [ ${COMPOSER_AUTH_JSON} = false ]; then \
     # remove the file
-    rm /home/laradock/.composer/auth.json \
+    rm /home/ignition/.composer/auth.json \
 ;fi
 
 ARG COMPOSER_REPO_PACKAGIST
@@ -225,7 +225,7 @@ RUN echo "" >> ~/.bashrc && \
 ###########################################################################
 
 # add ./vendor/bin to non-root user's bashrc (needed for phpunit)
-USER laradock
+USER ignition
 
 RUN echo "" >> ~/.bashrc && \
     echo 'export PATH="/var/www/vendor/bin:$PATH"' >> ~/.bashrc
@@ -477,8 +477,8 @@ RUN if [ ${INSTALL_WORKSPACE_SSH} = true ]; then \
         && rm -f /tmp/id_rsa* \
         && chmod 644 /root/.ssh/authorized_keys /root/.ssh/id_rsa.pub \
     && chmod 400 /root/.ssh/id_rsa \
-    && cp -rf /root/.ssh /home/laradock \
-    && chown -R laradock:laradock /home/laradock/.ssh \
+    && cp -rf /root/.ssh /home/ignition \
+    && chown -R ignition:ignition /home/ignition/.ssh \
 ;fi
 
 ###########################################################################
@@ -751,7 +751,7 @@ RUN if [ ${INSTALL_DRUPAL_CONSOLE} = true ]; then \
     chmod +x /usr/local/bin/drupal \
 ;fi
 
-USER laradock
+USER ignition
 
 ###########################################################################
 # Node / NVM:
@@ -775,7 +775,7 @@ ARG NPM_FETCH_RETRY_MINTIMEOUT
 ENV NPM_FETCH_RETRY_MINTIMEOUT ${NPM_FETCH_RETRY_MINTIMEOUT}
 ARG NPM_FETCH_RETRY_MAXTIMEOUT
 ENV NPM_FETCH_RETRY_MAXTIMEOUT ${NPM_FETCH_RETRY_MAXTIMEOUT}
-ENV NVM_DIR /home/laradock/.nvm
+ENV NVM_DIR /home/ignition/.nvm
 ARG NVM_NODEJS_ORG_MIRROR
 ENV NVM_NODEJS_ORG_MIRROR ${NVM_NODEJS_ORG_MIRROR}
 
@@ -822,7 +822,7 @@ USER root
 
 RUN if [ ${INSTALL_NODE} = true ]; then \
     echo "" >> ~/.bashrc && \
-    echo 'export NVM_DIR="/home/laradock/.nvm"' >> ~/.bashrc && \
+    echo 'export NVM_DIR="/home/ignition/.nvm"' >> ~/.bashrc && \
     echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> ~/.bashrc \
 ;fi
 
@@ -846,7 +846,7 @@ RUN if [ ${NPM_REGISTRY} ]; then \
 
 # Mount .npmrc into home folder
 COPY ./.npmrc /root/.npmrc
-COPY ./.npmrc /home/laradock/.npmrc
+COPY ./.npmrc /home/ignition/.npmrc
 
 
 ###########################################################################
@@ -856,12 +856,12 @@ COPY ./.npmrc /home/laradock/.npmrc
 USER root
 
 ARG INSTALL_PNPM=false
-ENV PNPM_HOME="/home/laradock/.local/share/pnpm"
-ENV PATH $PATH:/home/laradock/.local/share/pnpm
+ENV PNPM_HOME="/home/ignition/.local/share/pnpm"
+ENV PATH $PATH:/home/ignition/.local/share/pnpm
 
 RUN if [ ${INSTALL_PNPM} = true ]; then \
     echo "" >> ~/.bashrc && \
-    echo 'export PNPM_HOME="/home/laradock/.local/share/pnpm"' >> ~/.bashrc && \
+    echo 'export PNPM_HOME="/home/ignition/.local/share/pnpm"' >> ~/.bashrc && \
     echo 'export PATH="$PNPM_HOME:$PATH"' >> ~/.bashrc && \
     npx pnpm add -g pnpm \
 ;fi
@@ -871,7 +871,7 @@ RUN if [ ${INSTALL_PNPM} = true ]; then \
 # YARN:
 ###########################################################################
 
-USER laradock
+USER ignition
 
 ARG INSTALL_YARN=false
 ARG YARN_VERSION=latest
@@ -893,12 +893,12 @@ USER root
 
 RUN if [ ${INSTALL_YARN} = true ]; then \
     echo "" >> ~/.bashrc && \
-    echo 'export YARN_DIR="/home/laradock/.yarn"' >> ~/.bashrc && \
+    echo 'export YARN_DIR="/home/ignition/.yarn"' >> ~/.bashrc && \
     echo 'export PATH="$YARN_DIR/bin:$PATH"' >> ~/.bashrc \
 ;fi
 
 # Add PATH for YARN
-ENV PATH $PATH:/home/laradock/.yarn/bin
+ENV PATH $PATH:/home/ignition/.yarn/bin
 
 ###########################################################################
 # PHP Aerospike:
@@ -1022,7 +1022,7 @@ RUN set -xe; \
 # Laravel Envoy:
 ###########################################################################
 
-USER laradock
+USER ignition
 
 ARG INSTALL_LARAVEL_ENVOY=false
 
@@ -1036,7 +1036,7 @@ RUN if [ ${INSTALL_LARAVEL_ENVOY} = true ]; then \
 # Laravel Installer:
 ###########################################################################
 
-USER laradock
+USER ignition
 
 ARG INSTALL_LARAVEL_INSTALLER=false
 
@@ -1184,7 +1184,7 @@ RUN if [ ${INSTALL_IMAGE_OPTIMIZERS} = true ]; then \
     ;fi\
 ;fi
 
-USER laradock
+USER ignition
 
 ###########################################################################
 # Symfony:
@@ -1261,7 +1261,7 @@ RUN if [ ${INSTALL_SUPERVISOR} = true ]; then \
   ;fi \
 ;fi
 
-USER laradock
+USER ignition
 
 ###########################################################################
 # ImageMagick:
@@ -1602,10 +1602,10 @@ RUN if [ ${SHELL_OH_MY_ZSH} = true ]; then \
 ARG SHELL_OH_MY_ZSH_AUTOSUGESTIONS=false
 ARG SHELL_OH_MY_ZSH_ALIASES=false
 
-USER laradock
+USER ignition
 RUN if [ ${SHELL_OH_MY_ZSH} = true ]; then \
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh) --keep-zshrc" && \
-    sed -i -r 's/^plugins=\(.*?\)$/plugins=(laravel composer)/' /home/laradock/.zshrc && \
+    sed -i -r 's/^plugins=\(.*?\)$/plugins=(laravel composer)/' /home/ignition/.zshrc && \
     echo '\n\
 bindkey "^[OB" down-line-or-search\n\
 bindkey "^[OC" forward-char\n\
@@ -1617,20 +1617,20 @@ bindkey "^[[3~" delete-char\n\
 bindkey "^[[4~" end-of-line\n\
 bindkey "^[[5~" up-line-or-history\n\
 bindkey "^[[6~" down-line-or-history\n\
-bindkey "^?" backward-delete-char\n' >> /home/laradock/.zshrc && \
+bindkey "^?" backward-delete-char\n' >> /home/ignition/.zshrc && \
   if [ ${SHELL_OH_MY_ZSH_AUTOSUGESTIONS} = true ]; then \
-    sh -c "git clone https://github.com/zsh-users/zsh-autosuggestions /home/laradock/.oh-my-zsh/custom/plugins/zsh-autosuggestions" && \
-    sed -i 's~plugins=(~plugins=(zsh-autosuggestions ~g' /home/laradock/.zshrc && \
-    sed -i '1iZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20' /home/laradock/.zshrc && \
-    sed -i '1iZSH_AUTOSUGGEST_STRATEGY=(history completion)' /home/laradock/.zshrc && \
-    sed -i '1iZSH_AUTOSUGGEST_USE_ASYNC=1' /home/laradock/.zshrc && \
-    sed -i '1iTERM=xterm-256color' /home/laradock/.zshrc \
+    sh -c "git clone https://github.com/zsh-users/zsh-autosuggestions /home/ignition/.oh-my-zsh/custom/plugins/zsh-autosuggestions" && \
+    sed -i 's~plugins=(~plugins=(zsh-autosuggestions ~g' /home/ignition/.zshrc && \
+    sed -i '1iZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20' /home/ignition/.zshrc && \
+    sed -i '1iZSH_AUTOSUGGEST_STRATEGY=(history completion)' /home/ignition/.zshrc && \
+    sed -i '1iZSH_AUTOSUGGEST_USE_ASYNC=1' /home/ignition/.zshrc && \
+    sed -i '1iTERM=xterm-256color' /home/ignition/.zshrc \
   ;fi && \
   if [ ${SHELL_OH_MY_ZSH_ALIASES} = true ]; then \
-    echo "" >> /home/laradock/.zshrc && \
-    echo "# Load Custom Aliases" >> /home/laradock/.zshrc && \
-    echo "source /home/laradock/aliases.sh" >> /home/laradock/.zshrc && \
-    echo "" >> /home/laradock/.zshrc \
+    echo "" >> /home/ignition/.zshrc && \
+    echo "# Load Custom Aliases" >> /home/ignition/.zshrc && \
+    echo "source /home/ignition/aliases.sh" >> /home/ignition/.zshrc && \
+    echo "" >> /home/ignition/.zshrc \
   ;fi \
 ;fi
 
@@ -1643,19 +1643,19 @@ USER root
 USER root
 
 COPY ./aliases.sh /root/aliases.sh
-COPY ./aliases.sh /home/laradock/aliases.sh
+COPY ./aliases.sh /home/ignition/aliases.sh
 
 RUN if [ ${SHELL_OH_MY_ZSH} = true ]; then \
     sed -i 's/\r//' /root/aliases.sh && \
-    sed -i 's/\r//' /home/laradock/aliases.sh && \
-    chown laradock:laradock /home/laradock/aliases.sh && \
+    sed -i 's/\r//' /home/ignition/aliases.sh && \
+    chown ignition:ignition /home/ignition/aliases.sh && \
     echo "" >> ~/.zshrc && \
     echo "# Load Custom Aliases" >> ~/.zshrc && \
     echo "source ~/aliases.sh" >> ~/.zshrc && \
 	  echo "" >> ~/.zshrc \
 ;fi
 
-USER laradock
+USER ignition
 
 RUN if [ ${SHELL_OH_MY_ZSH} = true ]; then \
     echo "" >> ~/.zshrc && \
@@ -1676,28 +1676,28 @@ ARG SHELL_FISH=true
 RUN if [ ${SHELL_FISH} = true ]; then \
   apt update && \
   apt-get -y install fish wget && \
-  chsh -s /bin/fish laradock \
+  chsh -s /bin/fish ignition \
 ;fi
 
-USER laradock
+USER ignition
 
-COPY ./aliases.sh /home/laradock/aliases.sh
+COPY ./aliases.sh /home/ignition/aliases.sh
 
 RUN if [ ${SHELL_FISH} = true ]; then \
   # Install fish_ssh_agent
-  mkdir -p /home/laradock/.config/fish/functions && \
-  wget https://gitlab.com/kyb/fish_ssh_agent/raw/master/functions/fish_ssh_agent.fish -P /home/laradock/.config/fish/functions && \
-  echo "fish_ssh_agent" > /home/laradock/.config/fish/config.fish && \
-  echo "fish_ssh_agent" > /home/laradock/.config/fish/config.fish && \
+  mkdir -p /home/ignition/.config/fish/functions && \
+  wget https://gitlab.com/kyb/fish_ssh_agent/raw/master/functions/fish_ssh_agent.fish -P /home/ignition/.config/fish/functions && \
+  echo "fish_ssh_agent" > /home/ignition/.config/fish/config.fish && \
+  echo "fish_ssh_agent" > /home/ignition/.config/fish/config.fish && \
   curl -sfL https://git.io/fundle-install | fish && \
   fish -c "fundle plugin 'FabioAntunes/fish-nvm' && fundle plugin 'edc/bass' && fundle install" && \
   # Setup aliases
-  sed -i 's/\r//' /home/laradock/aliases.sh && \
-  chown laradock:laradock /home/laradock/aliases.sh && \
-  echo "fundle plugin 'FabioAntunes/fish-nvm'" >> /home/laradock/.config/fish/config.fish && \
-  echo "fundle plugin 'edc/bass'" >> /home/laradock/.config/fish/config.fish && \
-  echo "fundle init" >> /home/laradock/.config/fish/config.fish && \
-  echo "bass source ~/aliases.sh" >> /home/laradock/.config/fish/config.fish \
+  sed -i 's/\r//' /home/ignition/aliases.sh && \
+  chown ignition:ignition /home/ignition/aliases.sh && \
+  echo "fundle plugin 'FabioAntunes/fish-nvm'" >> /home/ignition/.config/fish/config.fish && \
+  echo "fundle plugin 'edc/bass'" >> /home/ignition/.config/fish/config.fish && \
+  echo "fundle init" >> /home/ignition/.config/fish/config.fish && \
+  echo "bass source ~/aliases.sh" >> /home/ignition/.config/fish/config.fish \
 ;fi
 
 ###########################################################################
@@ -1886,7 +1886,7 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     rm /var/log/lastlog /var/log/faillog
 
-USER laradock
+USER ignition
 RUN git config --global --add safe.directory "*"
 RUN git config --global core.fileMode false
 
