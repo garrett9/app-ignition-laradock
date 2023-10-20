@@ -1887,13 +1887,6 @@ RUN apt-get clean && \
     rm /var/log/lastlog /var/log/faillog
 
 USER ignition
-RUN git config --global --add safe.directory "*"
-RUN git config --global core.fileMode false
-
-USER root
-
-RUN apt-get update && apt-get install -y acl
-RUN git config --global --add safe.directory "*"
 
 # Set default work directory
 WORKDIR /var/www
