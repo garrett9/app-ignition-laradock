@@ -631,6 +631,13 @@ RUN set -eux; \
       fi \
     ;fi
 
+###########################################################################
+# excimer:
+###########################################################################
+
+RUN pecl install excimer && \
+  echo "extension=excimer.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/excimer.ini && \
+  ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/excimer.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-excimer.ini
 
 ###########################################################################
 # Taint EXTENSION
