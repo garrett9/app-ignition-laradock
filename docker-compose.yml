@@ -182,6 +182,7 @@ services:
         - ./php-worker/supervisord.d:/etc/supervisord.d
         - ~/.ssh:/home/ignition/.ssh
         - ~/.gitconfig:/home/ignition/.gitconfig
+        - ~/.laravel-vapor:/home/ignition/.laravel-vapor
       extra_hosts:
         - "dockerhost:${DOCKER_HOST_IP}"
       ports:

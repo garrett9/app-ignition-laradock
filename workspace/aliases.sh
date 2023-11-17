@@ -35,12 +35,6 @@ alias seed="php artisan db:seed"
 
 alias phpunit="./vendor/bin/phpunit"
 
-alias cc='codecept'
-alias ccb='codecept build'
-alias ccr='codecept run'
-alias ccu='codecept run unit'
-alias ccf='codecept run functional'
-
 alias npm-global="npm list -g --depth 0"
 alias reload="source ~/.aliases && echo \"$COL_GREEN ==> Aliases Reloaded... $COL_RESET \n \""
 alias run="npm run"
