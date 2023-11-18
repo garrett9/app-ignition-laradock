@@ -101,14 +101,10 @@ RUN set -eux; if [ ${INSTALL_LDAP} = true ]; then \
 #Install GD package:
 ARG INSTALL_GD=false
 RUN if [ ${INSTALL_GD} = true ]; then \
-  apk add --update --no-cache freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "4" ]; then \
-  docker-php-ext-configure gd --with-freetype --with-jpeg; \
-  else \
-  docker-php-ext-configure gd --with-freetype-dir=/usr/lib/ --with-jpeg-dir=/usr/lib/ --with-png-dir=/usr/lib/; \
-  fi; \
-  docker-php-ext-install gd \
-  ;fi
+   apk add --update --no-cache freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
+   docker-php-ext-configure gd --with-freetype --with-jpeg --with-png && \
+   docker-php-ext-install gd \
+;fi
 
 #Install ImageMagick:
 ARG INSTALL_IMAGEMAGICK=false

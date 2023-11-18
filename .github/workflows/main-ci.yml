@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [ 'adminer', 'apache2', 'mailcatcher', 'mailhog', 'mysql', 'nginx', 'phpmyadmin', 'postgres', 'redis', 'redis', 'redis-webui', 'seleniarm', 'selenium' ]
+        service: [ 'adminer', 'apache2', 'mailcatcher', 'mailhog', 'mysql', 'nginx', 'phpmyadmin', 'postgres', 'redis', 'redis-webui', 'seleniarm', 'selenium' ]
     steps:
       - uses: actions/checkout@v4
       - name: Build the Docker image
