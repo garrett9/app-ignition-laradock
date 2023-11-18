@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: [ "7.4", "8.0", "8.1", "8.2" ]
-        service: [ php-fpm, php-worker, workspace ]
+        service: [ php-fpm, php-worker, workspace, laravel-horizon ]
     steps:
       - uses: actions/checkout@v2
       - name: Build the Docker image
@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [ 'adminer', 'apache2', 'laravel-horizon', 'mailcatcher', 'mailhog', 'mysql', 'nginx', 'php-worker', 'phpmyadmin', 'postgres', 'redis', 'redis', 'redis-webui', 'seleniarm', 'selenium' ]
+        service: [ 'adminer', 'apache2', 'mailcatcher', 'mailhog', 'mysql', 'nginx', 'phpmyadmin', 'postgres', 'redis', 'redis', 'redis-webui', 'seleniarm', 'selenium' ]
     steps:
       - uses: actions/checkout@v4
       - name: Build the Docker image
