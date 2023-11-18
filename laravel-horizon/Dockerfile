@@ -31,10 +31,14 @@ RUN apk --update add wget \
   cyrus-sasl-dev \
   libgsasl-dev \
   oniguruma-dev \
-  libressl \
-  libressl-dev \
   supervisor \
-  procps
+  procps; \
+  if [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "50600" ] || \
+     [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
+    apk --update add libressl libressl-dev; \
+  else \
+    apk --update add openssl-dev; \
+  fi
 
 RUN pecl channel-update pecl.php.net; \
   docker-php-ext-install mysqli mbstring pdo pdo_mysql xml pcntl; \
@@ -206,6 +210,16 @@ RUN if [ ${INSTALL_AUDIOWAVEFORM} = true ]; then \
    && make install \
 ;fi
 
+#####################################
+# poppler-utils:
+#####################################
+USER root
+
+ARG INSTALL_POPPLER_UTILS=false
+
+RUN if [ ${INSTALL_POPPLER_UTILS} = true ]; then \
+  apk add --update --no-cache poppler-utils antiword \
+;fi
 
 # Install Cassandra drivers:
 ARG INSTALL_CASSANDRA=false
