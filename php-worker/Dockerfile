@@ -102,7 +102,7 @@ RUN set -eux; if [ ${INSTALL_LDAP} = true ]; then \
 ARG INSTALL_GD=false
 RUN if [ ${INSTALL_GD} = true ]; then \
    apk add --update --no-cache freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
-   docker-php-ext-configure gd --with-freetype --with-jpeg --with-png && \
+   docker-php-ext-configure gd --with-freetype --with-jpeg && \
    docker-php-ext-install gd \
 ;fi
 

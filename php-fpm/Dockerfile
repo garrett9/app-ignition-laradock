@@ -1081,7 +1081,7 @@ RUN if [ ${INSTALL_WKHTMLTOPDF} = true ]; then \
       libjpeg62 \
       libxtst6 \
       fontconfig \
-      libjpeg62-turbo \
+      libjpeg62-dev \
       xfonts-base \
       xfonts-75dpi \
       wget \
