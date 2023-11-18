@@ -46,7 +46,6 @@ jobs:
           sed -i -- 's/AUDIOWAVEFORM=true/AUDIOWAVEFORM=false/g' .env
           sed -i -- 's/SSDB=true/SSDB=false/g' .env
           sed -i -- 's/ENCHANT=true/ENCHANT=false/g' .env
-          sed -i -- 's/PG_CLIENT=true/PG_CLIENT=false/g' .env
           sed -i -- 's/MSSQL=true/MSSQL=false/g' .env
           docker compose build ${{ matrix.service }}
           docker compose up -d --no-deps -- ${{ matrix.service }}
@@ -62,7 +61,7 @@ jobs:
       matrix:
         service: [ 'nginx', 'redis', 'mysql', 'mariadb', 'percona', 'minio', 'mongo' ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build the Docker image
         run: |
           cp .env.example .env
