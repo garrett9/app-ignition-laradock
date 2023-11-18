@@ -16,6 +16,12 @@
     </IfVersion>
   </Directory>
 
+  <IfModule proxy_module>
+      <FilesMatch "\.php$">
+          SetHandler "proxy:fcgi://php-fpm:9000"
+      </FilesMatch>
+  </IfModule>
+
   ErrorLog /var/log/apache2/error.log
   CustomLog /var/log/apache2/access.log combined
 </VirtualHost>
