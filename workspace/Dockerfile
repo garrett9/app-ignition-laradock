@@ -251,27 +251,6 @@ COPY ./ca-certificates/* /usr/local/share/ca-certificates/
 RUN update-ca-certificates
 
 ###########################################################################
-# Drush:
-###########################################################################
-
-# Deprecated install of Drush 8 and earlier versions.
-# Drush 9 and up require Drush to be listed as a composer dependency of your site.
-
-USER root
-
-ARG INSTALL_DRUSH=false
-ARG DRUSH_VERSION
-ENV DRUSH_VERSION ${DRUSH_VERSION}
-
-RUN if [ ${INSTALL_DRUSH} = true ]; then \
-    apt-get -qq -y install mysql-client && \
-    # Install Drush with the phar file.
-    curl -fsSL -o /usr/local/bin/drush https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar | bash && \
-    chmod +x /usr/local/bin/drush && \
-    drush core-status \
-;fi
-
-###########################################################################
 # WP CLI:
 ###########################################################################
 
@@ -730,60 +709,10 @@ RUN if [ ${INSTALL_FSWATCH} = true ]; then \
 ;fi
 
 ###########################################################################
-
-# GraphViz extension
-###########################################################################
-
-ARG INSTALL_GRAPHVIZ=false
-
-RUN if [ ${INSTALL_GRAPHVIZ} = true ]; then \
-    apt-get install -yqq graphviz \
-;fi
-
-# IonCube Loader
-###########################################################################
-
-ARG INSTALL_IONCUBE=false
-
-RUN if [ ${INSTALL_IONCUBE} = true ]; then \
-    if [ ${LARADOCK_PHP_VERSION} = "8.1" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.4" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.3" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.2" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.1" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.0" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "5.6" ]; then \
-      # Install the php ioncube loader
-      curl -L -o /tmp/ioncube_loaders_lin_x86-64.tar.gz https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
-      && tar zxpf /tmp/ioncube_loaders_lin_x86-64.tar.gz -C /tmp \
-      && mv /tmp/ioncube/ioncube_loader_lin_${LARADOCK_PHP_VERSION}.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
-      && echo "zend_extension=ioncube_loader.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/ioncube.ini \
-      && ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/ioncube.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/0ioncube.ini \
-      && rm -rf /tmp/ioncube* \
-      && php -m | grep -oiE '^ionCube Loader$' \
-    ;fi \
-;fi
-
-###########################################################################
-# Drupal Console:
-###########################################################################
-
-USER root
-
-ARG INSTALL_DRUPAL_CONSOLE=false
-
-RUN if [ ${INSTALL_DRUPAL_CONSOLE} = true ]; then \
-    apt-get -y install mysql-client && \
-    curl https://drupalconsole.com/installer -L -o drupal.phar && \
-    mv drupal.phar /usr/local/bin/drupal && \
-    chmod +x /usr/local/bin/drupal \
-;fi
-
-USER ignition
-
-###########################################################################
 # Node / NVM:
 ###########################################################################
+
+USER ignition
 
 # Check if NVM needs to be installed
 ARG NODE_VERSION=node
@@ -1269,21 +1198,6 @@ RUN if [ ${INSTALL_PYTHON3} = true ]; then \
 ;fi
 
 ###########################################################################
-# POWERLINE:
-###########################################################################
-
-USER root
-ARG INSTALL_POWERLINE=false
-
-RUN if [ ${INSTALL_POWERLINE} = true ]; then \
-    if [ ${INSTALL_PYTHON} = true ]; then \
-    python -m pip install --upgrade powerline-status && \
-    echo "" >> /etc/bash.bashrc && \
-    echo ". /usr/local/lib/python2.7/dist-packages/powerline/bindings/bash/powerline.sh" >> /etc/bash.bashrc \
-  ;fi \
-;fi
-
-###########################################################################
 # SUPERVISOR:
 ###########################################################################
 ARG INSTALL_SUPERVISOR=false
@@ -1377,24 +1291,6 @@ RUN if [ ${INSTALL_PG_CLIENT} = true ]; then \
     && apt-get update \
     && apt-get -y install postgresql-client-${PG_CLIENT_VERSION} \
 ;fi
-
-###########################################################################
-# Phalcon:
-###########################################################################
-
-ARG INSTALL_PHALCON=false
-ARG LARADOCK_PHALCON_VERSION
-ENV LARADOCK_PHALCON_VERSION ${LARADOCK_PHALCON_VERSION}
-
-RUN if [ $INSTALL_PHALCON = true ]; then \
-      apt-get update -yqq \
-      && pecl channel-update pecl.php.net \
-      && apt-get install -yqq libpcre3-dev; \
-      pecl install phalcon-${LARADOCK_PHALCON_VERSION}; \
-      echo "extension=phalcon.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/phalcon.ini; \
-      ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/phalcon.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/50-phalcon.ini; \
-      php -m | grep -q 'phalcon' \
-  ;fi
 
 ###########################################################################
 # APCU:
@@ -1511,17 +1407,6 @@ RUN if [ ${INSTALL_AUDIOWAVEFORM} = true ]; then \
   && make install \
 ;fi
 
-#####################################
-# poppler-utils:
-#####################################
-USER root
-
-ARG INSTALL_POPPLER_UTILS=false
-
-RUN if [ ${INSTALL_POPPLER_UTILS} = true ]; then \
-  apt-get -y install poppler-utils antiword \
-;fi
-
 ###########################################################################
 # Mailparse extension:
 ###########################################################################
@@ -1545,20 +1430,6 @@ RUN if [ ${INSTALL_GNU_PARALLEL} = true ]; then \
 ;fi
 
 ###########################################################################
-# Bash Git Prompt
-###########################################################################
-
-ARG INSTALL_GIT_PROMPT=false
-
-COPY git-prompt.sh /tmp/git-prompt
-
-RUN if [ ${INSTALL_GIT_PROMPT} = true ]; then \
-    git clone https://github.com/magicmonty/bash-git-prompt.git /root/.bash-git-prompt --depth=1 && \
-    cat /tmp/git-prompt >> /root/.bashrc && \
-    rm /tmp/git-prompt \
-;fi
-
-###########################################################################
 # XMLRPC:
 ###########################################################################
 
@@ -1576,30 +1447,6 @@ ARG INSTALL_LNAV=false
 
 RUN if [ ${INSTALL_LNAV} = true ]; then \
     apt-get install -yqq lnav \
-;fi
-
-###########################################################################
-# Protoc:
-###########################################################################
-
-ARG INSTALL_PROTOC=false
-ARG PROTOC_VERSION
-
-RUN if [ ${INSTALL_PROTOC} = true ]; then \
-  apt-get -yqq install sudo wget unzip && \
-  if [ ${PROTOC_VERSION} = "latest" ]; then \
-    REAL_PROTOC_VERSION=$(curl -s https://api.github.com/repos/protocolbuffers/protobuf/releases/latest | \
-      sed -nr 's/.*"tag_name":\s?"v(.+?)".*/\1/p'); \
-  else \
-    REAL_PROTOC_VERSION=${PROTOC_VERSION}; \
-  fi && \
-  PROTOC_ZIP=protoc-${REAL_PROTOC_VERSION}-linux-x86_64.zip; \
-  wget https://github.com/protocolbuffers/protobuf/releases/download/v${REAL_PROTOC_VERSION}/${PROTOC_ZIP} && \
-  unzip -q -o ${PROTOC_ZIP} -d /usr/local bin/protoc && \
-  unzip -q -o ${PROTOC_ZIP} -d /usr/local 'include/*' && \
-  rm -f ${PROTOC_ZIP} && \
-  chmod +x /usr/local/bin/protoc && \
-  chmod -R +r /usr/local/include/google \
 ;fi
 
 ###########################################################################

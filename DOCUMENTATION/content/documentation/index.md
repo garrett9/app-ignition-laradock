@@ -378,33 +378,6 @@ WORKSPACE_INSTALL_PHPDBG=true
 PHP_FPM_INSTALL_PHPDBG=true
 ```
 
-
-
-
-<br>
-<a name="Install-ionCube-Loader"></a>
-## Install ionCube Loader
-
-1 - First install `ionCube Loader` in the Workspace and the PHP-FPM Containers:
-<br>
-a) open the `.env` file
-<br>
-b) search for the `WORKSPACE_INSTALL_IONCUBE` argument under the Workspace Container
-<br>
-c) set it to `true`
-<br>
-d) search for the `PHP_FPM_INSTALL_IONCUBE` argument under the PHP-FPM Container
-<br>
-e) set it to `true`
-
-2 - Re-build the containers `docker-compose build workspace php-fpm`
-
-Always download the latest version of [Loaders for ionCube ](http://www.ioncube.com/loaders.php).
-
-
-
-
-
 <br>
 <a name="Install-Deployer"></a>
 ## Install Deployer
@@ -1507,25 +1480,6 @@ To install CodeIgniter 3 on Laradock all you have to do is the following simple 
 3 - Re-build your PHP-FPM Container `docker-compose build php-fpm`.
 
 
-
-
-
-
-<br>
-<a name="Install-Powerline"></a>
-## Install Powerline
-
-1 - Open the `.env` file and set `WORKSPACE_INSTALL_POWERLINE` and `WORKSPACE_INSTALL_PYTHON` to `true`.
-
-2 - Run `docker-compose build workspace`, after the step above.
-
-Powerline is required python
-
-
-
-
-
-
 <br>
 <a name="Install-Symfony"></a>
 ## Install Symfony
@@ -2209,20 +2163,6 @@ For more information visit the [PHP Decimal website](https://php-decimal.io).
 3 - Set it to `true`
 
 4 - Re-build the container `docker-compose build workspace php-fpm`
-
-
-<br>
-<a name="Install-Bash-Git-Prompt"></a>
-## Install Git Bash Prompt
-A bash prompt that displays information about the current git repository. In particular the branch name, difference with remote branch, number of files staged, changed, etc.
-
-1 - Open the `.env` file
-
-2 - Search for the `WORKSPACE_INSTALL_GIT_PROMPT` argument under the Workspace Container
-
-3 - Set it to `true`
-
-4 - Re-build the container `docker-compose build workspace`
 
 **Note** You can configure bash-git-prompt by editing the `workspace/gitprompt.sh` file and re-building the workspace container.
 For configuration information, visit the [bash-git-prompt repository](https://github.com/magicmonty/bash-git-prompt).
