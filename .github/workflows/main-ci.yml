@@ -20,6 +20,7 @@ jobs:
         service: [ php-fpm, php-worker, workspace, laravel-horizon ]
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
       - name: Build the Docker image
         env:
           PHP_VERSION: ${{ matrix.php_version }}
@@ -58,6 +59,7 @@ jobs:
         service: [ 'adminer', 'apache2', 'mailcatcher', 'mailhog', 'mysql', 'nginx', 'phpmyadmin', 'postgres', 'redis', 'redis-webui', 'seleniarm', 'selenium' ]
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
       - name: Build the Docker image
         env:
           DOCKER_DEFAULT_PLATFORM: ${{ matrix.architecture }}
