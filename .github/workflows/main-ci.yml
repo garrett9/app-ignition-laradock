@@ -2,30 +2,28 @@ name: CI
 
 on:
   push:
-    branches: '**'
-    tags: '**'
-    paths-ignore:
-      - '.github/workflows/build-deploy-docs.yml'
-      - 'DOCUMENTATION/**'
+    branches: [main]
   pull_request:
-  schedule:
-    - cron: '0 0 * * 0'
+    branches: [main]
 
 permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
   build-php:
-    # Don't trigger on schedule event when in a fork
-    if: github.event_name != 'schedule' || (github.event_name == 'schedule' && github.repository == 'laradock/laradock')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php_version: [ "7.4", "8.0", "8.1", "8.2" ]
+        architecture: [ "amd64", "arm64" ]
         service: [ php-fpm, php-worker, workspace, laravel-horizon ]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up QEMU for ARM emulation
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
       - name: Build the Docker image
         env:
           PHP_VERSION: ${{ matrix.php_version }}
@@ -47,24 +45,33 @@ jobs:
           sed -i -- 's/SSDB=true/SSDB=false/g' .env
           sed -i -- 's/ENCHANT=true/ENCHANT=false/g' .env
           sed -i -- 's/MSSQL=true/MSSQL=false/g' .env
-          docker compose build ${{ matrix.service }}
-          docker compose up -d --no-deps -- ${{ matrix.service }}
-          docker compose exec -T -- ${{ matrix.service }} php -m
+          
+          # Build for the specified architecture
+          docker compose build --platform linux/${{ matrix.architecture }} ${{ matrix.service }}
+
+          # Run tests for the specified architecture
+          docker compose up -d --no-deps --platform linux/${{ matrix.architecture }} ${{ matrix.service }}
+          docker compose exec -T --platform linux/${{ matrix.architecture }} -- ${{ matrix.service }} php -m
           docker compose down
 
   build-other:
-    # Don't trigger on schedule event when in a fork
-    if: github.event_name != 'schedule' || (github.event_name == 'schedule' && github.repository == 'laradock/laradock')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        architecture: [ "amd64", "arm64" ]
         service: [ 'adminer', 'apache2', 'mailcatcher', 'mailhog', 'mysql', 'nginx', 'phpmyadmin', 'postgres', 'redis', 'redis-webui', 'seleniarm', 'selenium' ]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up QEMU for ARM emulation
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
       - name: Build the Docker image
         run: |
           cp .env.example .env
           sed -i -- 's/=false/=true/g' .env
           sed -i -- 's/CHANGE_SOURCE=true/CHANGE_SOURCE=false/g' .env
-          docker compose build ${{ matrix.service }}
+          
+          # Build for the specified architecture
+          docker compose build --platform linux/${{ matrix.architecture }} ${{ matrix.service }}
