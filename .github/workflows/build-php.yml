@@ -2,33 +2,39 @@ name: CI
 
 on:
   push:
-    branches: '**'
-    tags: '**'
-    paths-ignore:
-      - '.github/workflows/build-deploy-docs.yml'
-      - 'DOCUMENTATION/**'
+    branches: [master]
+    paths:
+      - 'php-fpm/**'
+      - 'php-worker/**'
+      - 'workspace/**'
+      - 'laravel-horizon/**'
   pull_request:
-  schedule:
-    - cron: '0 0 * * 0'
+    branches: [master]
+    paths:
+      - 'php-fpm/**'
+      - 'php-worker/**'
+      - 'workspace/**'
+      - 'laravel-horizon/**'
 
 permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
   build-php:
-    # Don't trigger on schedule event when in a fork
-    if: github.event_name != 'schedule' || (github.event_name == 'schedule' && github.repository == 'laradock/laradock')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php_version: [ "7.4", "8.0", "8.1", "8.2" ]
+        architecture: [ "linux/amd64", "linux/arm64" ]
         service: [ php-fpm, php-worker, workspace, laravel-horizon ]
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
       - name: Build the Docker image
         env:
           PHP_VERSION: ${{ matrix.php_version }}
+          DOCKER_DEFAULT_PLATFORM: ${{ matrix.architecture }}
         run: |
           set -eux
           cp .env.example .env
@@ -51,20 +57,5 @@ jobs:
           docker compose up -d --no-deps -- ${{ matrix.service }}
           docker compose exec -T -- ${{ matrix.service }} php -m
           docker compose down
-
-  build-other:
-    # Don't trigger on schedule event when in a fork
-    if: github.event_name != 'schedule' || (github.event_name == 'schedule' && github.repository == 'laradock/laradock')
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        service: [ 'adminer', 'apache2', 'mailcatcher', 'mailhog', 'mysql', 'nginx', 'phpmyadmin', 'postgres', 'redis', 'redis-webui', 'seleniarm', 'selenium' ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build the Docker image
-        run: |
-          cp .env.example .env
-          sed -i -- 's/=false/=true/g' .env
-          sed -i -- 's/CHANGE_SOURCE=true/CHANGE_SOURCE=false/g' .env
-          docker compose build ${{ matrix.service }}
+      - name: List Images
+        run: docker image inspect --format "{{.ID}} {{.RepoTags}} {{.Architecture}}" $(docker image ls -q)

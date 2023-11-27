@@ -657,30 +657,6 @@ RUN if [ ${INSTALL_OCI8} = true ]; then \
   ;fi
 
 ###########################################################################
-# IonCube Loader:
-###########################################################################
-
-ARG INSTALL_IONCUBE=false
-
-RUN if [ ${INSTALL_IONCUBE} = true ]; then \
-    if [ ${LARADOCK_PHP_VERSION} = "8.1" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.4" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.3" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.2" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.1" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.0" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "5.6" ]; then \
-      # Install the php ioncube loader
-      curl -L -o /tmp/ioncube_loaders_lin_x86-64.tar.gz https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz \
-      && tar zxpf /tmp/ioncube_loaders_lin_x86-64.tar.gz -C /tmp \
-      && mv /tmp/ioncube/ioncube_loader_lin_${LARADOCK_PHP_VERSION}.so $(php -r "echo ini_get('extension_dir');")/ioncube_loader.so \
-      && printf "zend_extension=ioncube_loader.so\n" > $PHP_INI_DIR/conf.d/0ioncube.ini \
-      && rm -rf /tmp/ioncube* \
-      && php -m | grep -oiE '^ionCube Loader$' \
-    ;fi \
-;fi
-
-###########################################################################
 # Opcache:
 ###########################################################################
 
@@ -878,22 +854,6 @@ RUN if [ ${INSTALL_CALENDAR} = true ]; then \
 ;fi
 
 ###########################################################################
-# Phalcon:
-###########################################################################
-
-ARG INSTALL_PHALCON=false
-ARG LARADOCK_PHALCON_VERSION
-ENV LARADOCK_PHALCON_VERSION ${LARADOCK_PHALCON_VERSION}
-
-RUN if [ $INSTALL_PHALCON = true ]; then \
-      apt-get update -yqq \
-      && pecl channel-update pecl.php.net \
-      && apt-get install -yqq libpcre3-dev; \
-      pecl install phalcon-${LARADOCK_PHALCON_VERSION}; \
-      docker-php-ext-enable phalcon \
-  ;fi
-
-###########################################################################
 # APCU:
 ###########################################################################
 
@@ -1050,17 +1010,6 @@ RUN if [ ${INSTALL_AUDIOWAVEFORM} = true ]; then \
    && cmake .. \
    && make \
    && make install \
-;fi
-
-#####################################
-# poppler-utils:
-#####################################
-USER root
-
-ARG INSTALL_POPPLER_UTILS=false
-
-RUN if [ ${INSTALL_POPPLER_UTILS} = true ]; then \
-  apt-get -y install poppler-utils antiword \
 ;fi
 
 #####################################

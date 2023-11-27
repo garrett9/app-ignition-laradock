@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+jobs:
+  build-other:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [ "linux/amd64", "linux/arm64" ]
+        service: [ 'adminer', 'apache2', 'mailcatcher', 'mailhog', 'mysql', 'nginx', 'phpmyadmin', 'postgres', 'redis', 'redis-webui', 'seleniarm', 'selenium' ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - name: Build the Docker image
+        env:
+          DOCKER_DEFAULT_PLATFORM: ${{ matrix.architecture }}
+        run: |
+          cp .env.example .env
+          sed -i -- 's/=false/=true/g' .env
+          sed -i -- 's/CHANGE_SOURCE=true/CHANGE_SOURCE=false/g' .env
+          docker compose build ${{ matrix.service }}
+      - name: List Images
+        run: docker image inspect --format "{{.ID}} {{.RepoTags}} {{.Architecture}}" $(docker image ls -q)

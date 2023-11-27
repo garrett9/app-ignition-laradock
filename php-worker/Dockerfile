@@ -270,17 +270,6 @@ RUN if [ ${INSTALL_AUDIOWAVEFORM} = true ]; then \
   && make install \
   ;fi
 
-#####################################
-# poppler-utils:
-#####################################
-USER root
-
-ARG INSTALL_POPPLER_UTILS=false
-
-RUN if [ ${INSTALL_POPPLER_UTILS} = true ]; then \
-  apk add --update --no-cache poppler-utils antiword \
-;fi
-
 # Install AMQP:
 ARG INSTALL_AMQP=false
 
@@ -334,20 +323,6 @@ RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
   && apk del .build-sec; \
   fi \
   ;fi
-
-# Install Phalcon ext
-ARG INSTALL_PHALCON=false
-ARG LARADOCK_PHALCON_VERSION
-ENV LARADOCK_PHALCON_VERSION ${LARADOCK_PHALCON_VERSION}
-
-RUN if [ $INSTALL_PHALCON = true ]; then \
-      apt-get update -yqq \
-      && pecl channel-update pecl.php.net \
-      && apt-get install -yqq libpcre3-dev; \
-      pecl install phalcon-${LARADOCK_PHALCON_VERSION}; \
-      docker-php-ext-enable phalcon; \
-      php -m | grep -q 'phalcon' \
-    ;fi
 
 # Install APCU ext
 ARG INSTALL_APCU=false
