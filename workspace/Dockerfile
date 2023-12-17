@@ -718,8 +718,6 @@ USER ignition
 ARG NODE_VERSION=node
 ENV NODE_VERSION ${NODE_VERSION}
 ARG INSTALL_NODE=false
-ARG INSTALL_NPM_GULP=false
-ARG INSTALL_NPM_BOWER=false
 ARG INSTALL_NPM_VUE_CLI=false
 ARG INSTALL_NPM_ANGULAR_CLI=false
 ARG INSTALL_NPM_CHECK_UPDATES_CLI=false
@@ -752,12 +750,6 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
         && npm config set fetch-retry-maxtimeout ${NPM_FETCH_RETRY_MAXTIMEOUT} \
         && if [ ${NPM_REGISTRY} ]; then \
         npm config set registry ${NPM_REGISTRY} \
-        ;fi \
-        && if [ ${INSTALL_NPM_GULP} = true ]; then \
-        npm install -g gulp \
-        ;fi \
-        && if [ ${INSTALL_NPM_BOWER} = true ]; then \
-        npm install -g bower \
         ;fi \
         && if [ ${INSTALL_NPM_VUE_CLI} = true ]; then \
         npm install -g @vue/cli \
