@@ -98,14 +98,6 @@ RUN set -eux; if [ ${INSTALL_LDAP} = true ]; then \
   php -m | grep -oiE '^ldap$'; \
   fi
 
-#Install GD package:
-ARG INSTALL_GD=false
-RUN if [ ${INSTALL_GD} = true ]; then \
-   apk add --update --no-cache freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
-   docker-php-ext-configure gd --with-freetype --with-jpeg && \
-   docker-php-ext-install gd \
-;fi
-
 #Install ImageMagick:
 ARG INSTALL_IMAGEMAGICK=false
 ARG IMAGEMAGICK_VERSION=latest
@@ -169,47 +161,6 @@ RUN if [ ${INSTALL_MONGO} = true ]; then \
       php -m | grep -oiE '^mongodb$'; \
     fi; \
   fi
-
-###########################################################################
-# PHP OCI8:
-###########################################################################
-
-ARG INSTALL_OCI8=false
-
-ENV LD_LIBRARY_PATH="/usr/local/instantclient"
-ENV ORACLE_HOME="/usr/local/instantclient"
-
-RUN if [ ${INSTALL_OCI8} = true ] && [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-  apk add make php7-pear php7-dev gcc musl-dev libnsl libaio poppler-utils libzip-dev zip unzip libaio-dev freetds-dev && \
-  ## Download and unarchive Instant Client v11
-  curl -o /tmp/basic.zip https://raw.githubusercontent.com/bumpx/oracle-instantclient/master/instantclient-basic-linux.x64-11.2.0.4.0.zip && \
-  curl -o /tmp/sdk.zip https://raw.githubusercontent.com/bumpx/oracle-instantclient/master/instantclient-sdk-linux.x64-11.2.0.4.0.zip && \
-  curl -o /tmp/sqlplus.zip https://raw.githubusercontent.com/bumpx/oracle-instantclient/master/instantclient-sqlplus-linux.x64-11.2.0.4.0.zip && \
-  unzip -d /usr/local/ /tmp/basic.zip && \
-  unzip -d /usr/local/ /tmp/sdk.zip && \
-  unzip -d /usr/local/ /tmp/sqlplus.zip \
-  ## Links are required for older SDKs
-  && ln -s /usr/local/instantclient_11_2 ${ORACLE_HOME} && \
-  ln -s ${ORACLE_HOME}/libclntsh.so.* ${ORACLE_HOME}/libclntsh.so && \
-  ln -s ${ORACLE_HOME}/libocci.so.* ${ORACLE_HOME}/libocci.so && \
-  ln -s ${ORACLE_HOME}/lib* /usr/lib && \
-  ln -s ${ORACLE_HOME}/sqlplus /usr/bin/sqlplus &&\
-  ln -s /usr/lib/libnsl.so.2.0.0  /usr/lib/libnsl.so.1 && \
-  ## Build OCI8 with PECL
-  echo "instantclient,${ORACLE_HOME}" | pecl install oci8 && \
-  echo 'extension=oci8.so' > /etc/php7/conf.d/30-oci8.ini \
-  #  Clean up
-  apk del php7-pear php7-dev gcc musl-dev && \
-  rm -rf /tmp/*.zip /tmp/pear/ && \
-  docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,/usr/local/instantclient \
-  && docker-php-ext-configure pdo_dblib --with-libdir=/lib \
-  && docker-php-ext-install pdo_oci \
-  && docker-php-ext-enable oci8 \
-  && docker-php-ext-install zip && \
-  # Install the zip extension
-  docker-php-ext-configure zip && \
-  php -m | grep -q 'zip' \
-  ;fi
 
 # Install PostgreSQL drivers:
 ARG INSTALL_PGSQL=false
@@ -288,17 +239,6 @@ RUN if [ ${INSTALL_AMQP} = true ]; then \
     docker-php-ext-enable amqp && \
     apk del -q rabbitmq-c-dev; \
     php -m | grep -oiE '^amqp$' \
-  ;fi
-
-# Install Gearman:
-ARG INSTALL_GEARMAN=false
-
-RUN if [ ${INSTALL_GEARMAN} = true ]; then \
-  sed -i "\$ahttp://dl-cdn.alpinelinux.org/alpine/edge/main" /etc/apk/repositories && \
-  sed -i "\$ahttp://dl-cdn.alpinelinux.org/alpine/edge/community" /etc/apk/repositories && \
-  sed -i "\$ahttp://dl-cdn.alpinelinux.org/alpine/edge/testing" /etc/apk/repositories && \
-  apk --update add php7-gearman && \
-  sh -c 'echo "extension=/usr/lib/php7/modules/gearman.so" > /usr/local/etc/php/conf.d/gearman.ini' \
   ;fi
 
 # Install Cassandra drivers:
@@ -460,90 +400,6 @@ RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
   fi
 
 ###########################################################################
-# SQL SERVER:
-###########################################################################
-
-ARG INSTALL_MSSQL=false
-
-RUN set -eux; \
-  if [ ${INSTALL_MSSQL} = true ]; then \
-  apk add --update gnupg; \
-  ###########################################################################
-  # Ref from:
-  # - https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15#alpine17
-  ###########################################################################
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-  # Add Microsoft repo for Microsoft ODBC Driver 17 for Linux
-  # Driver version 17.10 or higher is required for Alpine support.
-  # Download the desired package(s)
-  curl -O https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.10.5.1-1_amd64.apk \
-  # Verify signature, if 'gpg' is missing install it using 'apk add gnupg':
-  && curl -O https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.10.5.1-1_amd64.sig \
-  && curl https://packages.microsoft.com/keys/microsoft.asc  | gpg --import - \
-  && gpg --verify msodbcsql17_17.10.5.1-1_amd64.sig msodbcsql17_17.10.5.1-1_amd64.apk \
-  # Install the package(s)
-  && apk add --allow-untrusted msodbcsql17_17.10.5.1-1_amd64.apk unixodbc-dev \
-  ;else \
-  # Add Microsoft repo for Microsoft ODBC Driver 18 for Linux
-  # Driver version 18.5 or higher is required for Alpine support.
-  # Download the desired package(s)
-  curl -O https://download.microsoft.com/download/3/5/5/355d7943-a338-41a7-858d-53b259ea33f5/msodbcsql18_18.3.2.1-1_amd64.apk \
-  # Verify signature, if 'gpg' is missing install it using 'apk add gnupg':
-  && curl -O https://download.microsoft.com/download/3/5/5/355d7943-a338-41a7-858d-53b259ea33f5/msodbcsql18_18.3.2.1-1_amd64.sig \
-  && curl https://packages.microsoft.com/keys/microsoft.asc  | gpg --import - \
-  && gpg --verify msodbcsql18_18.3.2.1-1_amd64.sig msodbcsql18_18.3.2.1-1_amd64.apk \
-  # Install the package(s)
-  && apk add --allow-untrusted msodbcsql18_18.3.2.1-1_amd64.apk unixodbc-dev \
-  ;fi \
-  # 
-  && if [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
-    pecl install pdo_sqlsrv-5.3.0 sqlsrv-5.3.0 \
-  ;elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70100" ]; then \
-    pecl install pdo_sqlsrv-5.6.1 sqlsrv-5.6.1 \
-  ;elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70200" ]; then \
-    pecl install pdo_sqlsrv-5.8.1 sqlsrv-5.8.1 \
-  ;elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70300" ]; then \
-    pecl install pdo_sqlsrv-5.9.0 sqlsrv-5.9.0 \
-  ;elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70400" ]; then \
-    pecl install pdo_sqlsrv-5.10.1 sqlsrv-5.10.1 \
-  ;else \
-    pecl install pdo_sqlsrv sqlsrv \
-  ;fi \
-  # && echo extension=pdo_sqlsrv.so >> `php --ini | grep "Scan for additional .ini files" | sed -e "s|.*:\s*||"`/10_pdo_sqlsrv.ini
-  # && echo extension=sqlsrv.so >> `php --ini | grep "Scan for additional .ini files" | sed -e "s|.*:\s*||"`/00_sqlsrv.ini
-  && docker-php-ext-enable pdo_sqlsrv sqlsrv \
-  && php -m | grep -oiE '^pdo_sqlsrv$' \
-  && php -m | grep -oiE '^sqlsrv$' \
-  ;fi
-
-###########################################################################
-# PHP SSDB:
-###########################################################################
-
-USER root
-
-ARG INSTALL_SSDB=false
-
-RUN set -xe; \
-  if [ ${INSTALL_SSDB} = true ] && [ $(php -r "echo PHP_MAJOR_VERSION;") != "8" ]; then \
-  apk --update add sudo wget && \
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-  curl -L -o /tmp/ssdb-client-php.tar.gz https://github.com/jonnywang/phpssdb/archive/php7.tar.gz; \
-  else \
-  curl -L -o /tmp/ssdb-client-php.tar.gz https://github.com/jonnywang/phpssdb/archive/master.tar.gz; \
-  fi \
-  && mkdir -p /tmp/ssdb-client-php \
-  && tar -C /tmp/ssdb-client-php -zxvf /tmp/ssdb-client-php.tar.gz --strip 1 \
-  && cd /tmp/ssdb-client-php \
-  && phpize \
-  && ./configure \
-  && make \
-  && make install \
-  && rm /tmp/ssdb-client-php.tar.gz \
-  && docker-php-ext-enable ssdb \
-  ;fi
-
-###########################################################################
 # Intl:
 ###########################################################################
 
@@ -554,37 +410,6 @@ RUN if [ ${INSTALL_INTL} = true ]; then \
     docker-php-ext-configure intl && \
     docker-php-ext-install intl && \
     docker-php-ext-enable intl \
-;fi
-
-############################################################################
-## Event:
-############################################################################
-USER root
-
-ARG INSTALL_EVENT=false
-
-RUN set -eux; \
-  if [ ${INSTALL_EVENT} = true ]; then \
-      curl -L -o  /tmp/libevent.tar.gz https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz   &&\
-      mkdir -p /tmp/libevent-php &&\
-      tar -C /tmp/libevent-php -zxvf /tmp/libevent.tar.gz --strip 1 &&\
-      cd /tmp/libevent-php &&\
-      ./configure --prefix=/usr/local/libevent-2.1.12  &&\
-      make &&\
-      make install &&\
-      rm /tmp/libevent.tar.gz &&\
-      docker-php-ext-install sockets  &&\
-      curl -L -o /tmp/event.tar.gz http://pecl.php.net/get/event-3.0.6.tgz &&\
-      mkdir -p /tmp/event-php &&\
-      tar -C /tmp/event-php -zxvf /tmp/event.tar.gz --strip 1 &&\
-      cd /tmp/event-php &&\
-      phpize &&\
-      ./configure  --with-event-libevent-dir=/usr/local/libevent-2.1.12/ &&\
-      make &&\
-      make install &&\
-      rm /tmp/event.tar.gz &&\
-      docker-php-ext-enable --ini-name zz-event.ini event &&\
-      php -m  | grep -q 'event' \
 ;fi
 
 #
