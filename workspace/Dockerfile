@@ -1242,9 +1242,7 @@ RUN if [ ${INSTALL_TRADER} = true ]; then \
 
 ARG WORKSPACE_VSCODE_DEVCONTAINER
 
-COPY devcontainer-config.json /tmp/devcontainer-config.json
-
-LABEL devcontainer.metadata="${WORKSPACE_VSCODE_DEVCONTAINER}}"
+LABEL devcontainer.metadata="${WORKSPACE_VSCODE_DEVCONTAINER}"
 
 #
 #--------------------------------------------------------------------------
