@@ -1242,11 +1242,9 @@ RUN if [ ${INSTALL_TRADER} = true ]; then \
 # VS Code Configuration
 ###########################################################################
 
-COPY devcontainer-config.json ~/devcontainer-config.json
+COPY devcontainer-config.json /tmp/devcontainer-config.json
 
-LABEL devcontainer.metadata="$(cat ~/devcontainer-config.json)"
-
-RUN rm ~/devcontainer-config.json
+LABEL devcontainer.metadata="$(cat /tmp/devcontainer-config.json)"
 
 #
 #--------------------------------------------------------------------------
