@@ -16,8 +16,6 @@ ARG LARADOCK_PHP_VERSION
 ARG BASE_IMAGE_TAG_PREFIX=latest
 FROM laradock/workspace:${BASE_IMAGE_TAG_PREFIX}-${LARADOCK_PHP_VERSION}
 
-LABEL maintainer="Mahmoud Zalt <mahmoud@zalt.me>"
-
 ARG LARADOCK_PHP_VERSION
 
 # Set Environment Variables
@@ -1242,9 +1240,11 @@ RUN if [ ${INSTALL_TRADER} = true ]; then \
 # VS Code Configuration
 ###########################################################################
 
+ARG WORKSPACE_VSCODE_DEVCONTAINER
+
 COPY devcontainer-config.json /tmp/devcontainer-config.json
 
-LABEL devcontainer.metadata="$(cat /tmp/devcontainer-config.json)"
+LABEL devcontainer.metadata="${WORKSPACE_VSCODE_DEVCONTAINER}}"
 
 #
 #--------------------------------------------------------------------------
