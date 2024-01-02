@@ -905,24 +905,6 @@ RUN if [ ${INSTALL_MEMCACHED} = true ]; then \
 ;fi
 
 ###########################################################################
-# pgsql client
-###########################################################################
-
-USER root
-
-ARG INSTALL_PG_CLIENT=false
-ARG PG_CLIENT_VERSION
-
-RUN if [ ${INSTALL_PG_CLIENT} = true ]; then \
-    # Install the pgsql client
-    apt-get -yqq install wget \
-    && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
-    && apt-get update \
-    && apt-get -y install postgresql-client-${PG_CLIENT_VERSION} \
-;fi
-
-###########################################################################
 # APCU:
 ###########################################################################
 
