@@ -86,14 +86,6 @@ RUN set -eux; if [ ${INSTALL_LDAP} = true ]; then \
       php -m | grep -oiE '^ldap$'; \
     fi
 
-#Install GD package:
-ARG INSTALL_GD=false
-RUN if [ ${INSTALL_GD} = true ]; then \
-   apk add --update --no-cache freetype-dev libjpeg-turbo-dev jpeg-dev libpng-dev; \
-   docker-php-ext-configure gd --with-freetype --with-jpeg && \
-   docker-php-ext-install gd \
-;fi
-
 #Install ImageMagick package:
 ARG INSTALL_IMAGEMAGICK=false
 ARG IMAGEMAGICK_VERSION=latest

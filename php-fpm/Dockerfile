@@ -188,27 +188,6 @@ RUN if [ ${INSTALL_PGSQL} = true ]; then \
 ;fi
 
 ###########################################################################
-# pgsql client
-###########################################################################
-
-ARG INSTALL_PG_CLIENT=false
-ARG INSTALL_POSTGIS=false
-ARG PG_CLIENT_VERSION
-
-RUN if [ ${INSTALL_PG_CLIENT} = true ]; then \
-    apt-get install -yqq gnupg \
-    && . /etc/os-release \
-    && echo "deb http://apt.postgresql.org/pub/repos/apt $VERSION_CODENAME-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
-    && curl -sL https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && apt-get update -yqq \
-    && apt-get install -yqq postgresql-client-${PG_CLIENT_VERSION} postgis; \
-    if [ ${INSTALL_POSTGIS} = true ]; then \
-      apt-get install -yqq postgis; \
-    fi \
-    && apt-get purge -yqq gnupg \
-;fi
-
-###########################################################################
 # xDebug:
 ###########################################################################
 
@@ -474,29 +453,6 @@ RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
 ;fi
 
 ###########################################################################
-# GEARMAN:
-###########################################################################
-
-ARG INSTALL_GEARMAN=false
-
-RUN if [ ${INSTALL_GEARMAN} = true ]; then \
-    apt-get -y install libgearman-dev && \
-    cd /tmp && \
-    curl -L https://github.com/wcgallego/pecl-gearman/archive/gearman-2.0.5.zip -O && \
-    unzip gearman-2.0.5.zip && \
-    mv pecl-gearman-gearman-2.0.5 pecl-gearman && \
-    cd /tmp/pecl-gearman && \
-    phpize && \
-    ./configure && \
-    make -j$(nproc) && \
-    make install && \
-    cd / && \
-    rm /tmp/gearman-2.0.5.zip && \
-    rm -r /tmp/pecl-gearman && \
-    docker-php-ext-enable gearman \
-;fi
-
-###########################################################################
 # xlswriter:
 ###########################################################################
 
@@ -602,61 +558,6 @@ RUN set -xe; \
 ;fi
 
 ###########################################################################
-# PHP OCI8:
-###########################################################################
-
-ARG INSTALL_OCI8=false
-ARG ORACLE_INSTANT_CLIENT_MIRROR=https://github.com/the-paulus/oracle-instantclient/raw/master/
-ARG ORACLE_INSTANT_CLIENT_ARCH=x86_64
-ARG ORACLE_INSTANT_CLIENT_MAJOR=18
-ARG ORACLE_INSTANT_CLIENT_MINOR=3
-
-ENV ORACLE_INSTANT_CLIENT_VERSION=${ORACLE_INSTANT_CLIENT_MAJOR}_${ORACLE_INSTANT_CLIENT_MINOR}
-ENV LD_LIBRARY_PATH="/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}"
-ENV OCI_HOME="/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}"
-ENV OCI_LIB_DIR="/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}"
-ENV OCI_INCLUDE_DIR="/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/sdk/include"
-ENV OCI_VERSION=${ORACLE_INSTANT_CLIENT_MAJOR}
-
-RUN if [ ${INSTALL_OCI8} = true ]; then \
-    # Install wget
-    apt-get install --no-install-recommends -yqq wget \
-    # Install Oracle Instantclient
-    && mkdir /opt/oracle \
-        && cd /opt/oracle \
-        && wget ${ORACLE_INSTANT_CLIENT_MIRROR}instantclient-basic-linux.${ORACLE_INSTANT_CLIENT_ARCH}-${ORACLE_INSTANT_CLIENT_VERSION}.zip \
-      && wget ${ORACLE_INSTANT_CLIENT_MIRROR}instantclient-sdk-linux.${ORACLE_INSTANT_CLIENT_ARCH}-${ORACLE_INSTANT_CLIENT_VERSION}.zip \
-      && unzip /opt/oracle/instantclient-basic-linux.${ORACLE_INSTANT_CLIENT_ARCH}-${ORACLE_INSTANT_CLIENT_VERSION}.zip -d /opt/oracle \
-      && unzip /opt/oracle/instantclient-sdk-linux.${ORACLE_INSTANT_CLIENT_ARCH}-${ORACLE_INSTANT_CLIENT_VERSION}.zip -d /opt/oracle \
-      && if [ ${OCI_VERSION} -lt 18 ] ; then ln -s /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libclntsh.so.${ORACLE_INSTANT_CLIENT_MAJOR}.${ORACLE_INSTANT_CLIENT_MINOR} /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libclntsh.so ; fi\
-      && if [ ${OCI_VERSION} -lt 18 ] ; then ln -s /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libclntshcore.so.${ORACLE_INSTANT_CLIENT_MAJOR}.${ORACLE_INSTANT_CLIENT_MINOR} /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libclntshcore.so ; fi \
-      && if [ ${OCI_VERSION} -lt 18 ] ; then ln -s /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libocci.so.${ORACLE_INSTANT_CLIENT_MAJOR}.${ORACLE_INSTANT_CLIENT_MINOR} /opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/libocci.so ; fi \
-        && rm -rf /opt/oracle/*.zip \
-    # Install PHP extensions deps
-    && apt-get install --no-install-recommends -yqq \
-      libaio-dev \
-      freetds-dev && \
-    # Install PHP extensions
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      echo 'instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/' | pecl install oci8-2.0.12; \
-    elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-      echo 'instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/' | pecl install oci8-2.2.0; \
-    elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ]; then \
-      echo "instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/" | pecl install oci8-3.0.1; \
-    elif [ $(php -r "echo PHP_MAJOR_VERSION . PHP_MINOR_VERSION;") = "81" ]; then \
-        echo "instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/" | pecl install oci8-3.2.1; \
-    else \
-      echo "instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION}/" | pecl install oci8; \
-    fi \
-    && docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,/opt/oracle/instantclient_${ORACLE_INSTANT_CLIENT_VERSION},${ORACLE_INSTANT_CLIENT_MAJOR}.${ORACLE_INSTANT_CLIENT_MINOR} \
-        && docker-php-ext-configure pdo_dblib --with-libdir=/lib/x86_64-linux-gnu \
-        && docker-php-ext-install \
-                pdo_oci \
-        && docker-php-ext-enable \
-                oci8 \
-  ;fi
-
-###########################################################################
 # Opcache:
 ###########################################################################
 
@@ -668,17 +569,6 @@ RUN if [ ${INSTALL_OPCACHE} = true ]; then \
 
 # Copy opcache configration
 COPY ./opcache.ini /usr/local/etc/php/conf.d/opcache.ini
-
-###########################################################################
-# Mysqli Modifications:
-###########################################################################
-
-ARG INSTALL_MYSQLI=false
-
-RUN if [ ${INSTALL_MYSQLI} = true ]; then \
-    docker-php-ext-install mysqli \
-;fi
-
 
 ###########################################################################
 # Human Language and Character Encoding Support:
@@ -718,69 +608,6 @@ RUN if [ ${INSTALL_LDAP} = true ]; then \
     ARCH=$(arch)   && \
     docker-php-ext-configure ldap --with-libdir="lib/${ARCH}-linux-gnu/" && \
     docker-php-ext-install ldap \
-;fi
-
-###########################################################################
-# SQL SERVER:
-###########################################################################
-
-ARG INSTALL_MSSQL=false
-
-RUN set -eux; \
-  if [ ${INSTALL_MSSQL} = true ]; then \
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      apt-get -yqq install freetds-dev libsybdb5 \
-      && ln -s /usr/lib/x86_64-linux-gnu/libsybdb.so /usr/lib/libsybdb.so \
-      && docker-php-ext-install mssql pdo_dblib \
-      && php -m | grep -oiE '^mssql$' \
-      && php -m | grep -oiE '^pdo_dblib$' \
-    ;else \
-      ###########################################################################
-      # Ref from https://github.com/Microsoft/msphpsql/wiki/Dockerfile-for-adding-pdo_sqlsrv-and-sqlsrv-to-official-php-image
-      ###########################################################################
-      # Add Microsoft repo for Microsoft ODBC Driver 13 for Linux \
-      apt-get update \
-      && apt-get install -yqq apt-transport-https gnupg lsb-release \
-      && if [ ${LARADOCK_PHP_VERSION} = "8.1" ] || [ ${LARADOCK_PHP_VERSION} = "8.2" ]; then \
-        curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
-      ;else \
-        curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-      ;fi \
-      && curl https://packages.microsoft.com/config/debian/$(lsb_release -rs)/prod.list > /etc/apt/sources.list.d/mssql-release.list \
-      && apt-get update -yqq \
-      && ACCEPT_EULA=Y apt-get install -yqq unixodbc unixodbc-dev libgss3 odbcinst msodbcsql18 locales \
-      && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
-      && ln -sfn /etc/locale.alias /usr/share/locale/locale.alias \
-      && locale-gen \
-      && if [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
-        pecl install pdo_sqlsrv-5.3.0 sqlsrv-5.3.0 \
-      ;elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70100" ]; then \
-        pecl install pdo_sqlsrv-5.6.1 sqlsrv-5.6.1 \
-      ;elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70200" ]; then \
-        pecl install pdo_sqlsrv-5.8.1 sqlsrv-5.8.1 \
-      ;elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70300" ]; then \
-        pecl install pdo_sqlsrv-5.9.0 sqlsrv-5.9.0 \
-      ;elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70400" ]; then \
-        pecl install pdo_sqlsrv-5.10.1 sqlsrv-5.10.1 \
-      ;else \
-        pecl install pdo_sqlsrv sqlsrv \
-      ;fi \
-      && docker-php-ext-enable pdo_sqlsrv sqlsrv \
-      && php -m | grep -oiE '^pdo_sqlsrv$' \
-      && php -m | grep -oiE '^sqlsrv$' \
-    ;fi \
-  ;fi
-
-###########################################################################
-# Image optimizers:
-###########################################################################
-
-USER root
-
-ARG INSTALL_IMAGE_OPTIMIZERS=false
-
-RUN if [ ${INSTALL_IMAGE_OPTIMIZERS} = true ]; then \
-    apt-get install -yqq jpegoptim optipng pngquant gifsicle \
 ;fi
 
 ###########################################################################
@@ -1099,31 +926,6 @@ RUN if [ ${INSTALL_PHPDECIMAL} = true ]; then \
 fi
 
 ###########################################################################
-# zookeeper
-###########################################################################
-ARG INSTALL_ZOOKEEPER=false
-
-RUN set -eux; \
-    if [ ${INSTALL_ZOOKEEPER} = true ]; then \
-    apt install -yqq libzookeeper-mt-dev; \
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-      curl -L -o /tmp/php-zookeeper.tar.gz https://github.com/php-zookeeper/php-zookeeper/archive/master.tar.gz; \
-      mkdir -p /tmp/php-zookeeper; \
-      tar -C /tmp/php-zookeeper -zxvf /tmp/php-zookeeper.tar.gz --strip 1; \
-      cd /tmp/php-zookeeper; \
-      phpize && ./configure && make && make install;\
-    else \
-      if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-        pecl install zookeeper-0.5.0; \
-      else \
-        pecl install zookeeper-0.7.2; \
-      fi; \
-    fi; \
-    docker-php-ext-enable zookeeper; \
-    php -m | grep -q 'zookeeper'; \
-    fi
-
-###########################################################################
 # New Relic for PHP:
 ###########################################################################
 ARG NEW_RELIC=${NEW_RELIC}
@@ -1142,110 +944,6 @@ RUN if [ ${NEW_RELIC} = true ]; then \
   -e 's/;newrelic.daemon.app_connect_timeout =.*/newrelic.daemon.app_connect_timeout=15s/' \
   -e 's/;newrelic.daemon.start_timeout =.*/newrelic.daemon.start_timeout=5s/' \
   /usr/local/etc/php/conf.d/newrelic.ini \
-;fi
-
-###########################################################################
-# PHP SSDB:
-###########################################################################
-
-USER root
-
-ARG INSTALL_SSDB=false
-
-RUN set -xe; \
-    if [ ${INSTALL_SSDB} = true ] && [ $(php -r "echo PHP_MAJOR_VERSION;") != "8" ]; then \
-    apt-get -y install sudo wget && \
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-      curl -L -o /tmp/ssdb-client-php.tar.gz https://github.com/jonnywang/phpssdb/archive/php7.tar.gz; \
-    else \
-      curl -L -o /tmp/ssdb-client-php.tar.gz https://github.com/jonnywang/phpssdb/archive/master.tar.gz; \
-    fi \
-    && mkdir -p /tmp/ssdb-client-php \
-    && tar -C /tmp/ssdb-client-php -zxvf /tmp/ssdb-client-php.tar.gz --strip 1 \
-    && cd /tmp/ssdb-client-php \
-    && phpize \
-    && ./configure \
-    && make \
-    && make install \
-    && rm /tmp/ssdb-client-php.tar.gz \
-    && docker-php-ext-enable ssdb \
-;fi
-###########################################################################
-# Downgrade Openssl:
-###########################################################################
-
-ARG DOWNGRADE_OPENSSL_TLS_AND_SECLEVEL=false
-ARG DOWNGRADE_OPENSSL_TLS_VERSION=1.2
-
-RUN if [ ${DOWNGRADE_OPENSSL_TLS_AND_SECLEVEL} = true ]; then \
-    sed -i 's,^\(MinProtocol[ ]*=\).*,\1'TLSv${DOWNGRADE_OPENSSL_TLS_VERSION}',g' /etc/ssl/openssl.cnf \
-    && \
-    sed -i 's,^\(CipherString[ ]*=\).*,\1'DEFAULT@SECLEVEL=1',g' /etc/ssl/openssl.cnf\
-;fi
-
-###########################################################################
-# zmq
-###########################################################################
-
-USER root
-
-ARG INSTALL_ZMQ=false
-
-RUN if [ ${INSTALL_ZMQ} = true ]; then \
-    apt-get install --yes git libzmq3-dev \
-    && git clone https://github.com/zeromq/php-zmq.git \
-    && cd php-zmq \
-    && phpize \
-    && ./configure \
-    && make \
-    && make install \
-    && cd .. \
-    && rm -fr php-zmq \
-    && echo "extension=zmq.so" > /usr/local/etc/php/conf.d/zmq.ini \
-;fi
-
-
-############################################################################
-## Event:
-############################################################################
-USER root
-
-ARG INSTALL_EVENT=false
-
-RUN set -eux; \
-  if [ ${INSTALL_EVENT} = true ]; then \
-      curl -L -o  /tmp/libevent.tar.gz https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz   &&\
-      mkdir -p /tmp/libevent-php &&\
-      tar -C /tmp/libevent-php -zxvf /tmp/libevent.tar.gz --strip 1 &&\
-      cd /tmp/libevent-php &&\
-      ./configure --prefix=/usr/local/libevent-2.1.12  &&\
-      make &&\
-      make install &&\
-      rm /tmp/libevent.tar.gz &&\
-      docker-php-ext-install sockets  &&\
-      curl -L -o /tmp/event.tar.gz http://pecl.php.net/get/event-3.0.6.tgz &&\
-      mkdir -p /tmp/event-php &&\
-      tar -C /tmp/event-php -zxvf /tmp/event.tar.gz --strip 1 &&\
-      cd /tmp/event-php &&\
-      phpize &&\
-      ./configure  --with-event-libevent-dir=/usr/local/libevent-2.1.12/ &&\
-      make &&\
-      make install &&\
-      rm /tmp/event.tar.gz &&\
-      docker-php-ext-enable event &&\
-      php -m  | grep -q 'event' \
-;fi
-
-###########################################################################
-# DNS utilities:
-###########################################################################
-
-USER root
-
-ARG INSTALL_DNSUTILS=false
-
-RUN if [ ${INSTALL_DNSUTILS} = true ]; then \
-    apt-get update && apt-get install -y dnsutils \
 ;fi
 
 ###########################################################################
