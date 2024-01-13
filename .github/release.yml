@@ -8,6 +8,9 @@ changelog:
     - title: Features
       labels:
         - enhancement
+    - title: Improvements
+      labels:
+        - improvement
     - title: Bug Fixes
       labels:
         - bug
