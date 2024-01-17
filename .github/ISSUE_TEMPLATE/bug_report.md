@@ -1,49 +1,16 @@
 ---
 name: "Bug report"
-about: "Report a general issue, encountered while using Laradock."
+about: "Report a general issue, encountered while using AppIgnition."
 labels: "Type: Bug"
 ---
 
 ### Description:
-<!-- A clear and concise description of what the bug is. -->
+<!-- A clear and concise description of what the bug is. If possible, please produce either a screenshot or paste an error log. -->
 
-### Expected Behavior:
+### Expected Behavior (If Applicable):
 <!-- A clear and concise description of what you expected to happen. -->
 
-### Context information:
-
-**Output of `git rev-parse HEAD`**
-
-```
-{paste here}
-```
-
-**Output of `docker version`**
-
-```
-{paste here}
-```
-
-**Output of `docker-compose version`**
-
-```
-{paste here}
-```
-
-**System info: Mac, Windows or Linux. Include which disto/version**
-
-```
-{paste here}
-```
-
-### Steps to reproduce the issue:
-<!--- How can we reproduce the issue? -->
-
-1.
-2.
-3.
-
-### Stacktrace & Additional info:
+### Current Version of AppIgnition
 
 ```
 {paste here}
