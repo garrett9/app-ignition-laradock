@@ -1,6 +1,6 @@
 ---
 name: "Bug report"
-about: "Report a general issue, encountered while using AppIgnition."
+about: "Report a general issue encountered while using AppIgnition."
 labels: "Type: Bug"
 ---
 
