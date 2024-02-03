@@ -39,9 +39,6 @@ ENV PUID ${PUID}
 ARG PGID=1000
 ENV PGID ${PGID}
 
-RUN groupmod -g 1001 node \
-  && usermod -u 1001 -g 1001 node
-
 RUN set -xe; \
     apt-get update -yqq && \
     groupadd -g ${PGID} ignition && \
@@ -69,15 +66,6 @@ ENV NVM_DIR /home/ignition/.nvm
 RUN mkdir -p $NVM_DIR && \
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash \
         && . $NVM_DIR/nvm.sh
-
-###########################################################################
-# Set Timezone
-###########################################################################
-
-ARG TZ=UTC
-ENV TZ ${TZ}
-
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ###########################################################################
 # User Aliases
