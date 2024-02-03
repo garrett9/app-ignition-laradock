@@ -332,58 +332,6 @@ RUN if [ ${INSTALL_TAINT} = true ]; then \
     fi \
 ;fi
 
-###########################################################################
-# MongoDB:
-###########################################################################
-
-ARG INSTALL_MONGO=false
-
-RUN if [ ${INSTALL_MONGO} = true ]; then \
-    # Install the mongodb extension
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      pecl install mongo; \
-      docker-php-ext-enable mongo; \
-      php -m | grep -oiE '^mongo$'; \
-    else \
-      if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && { [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ] || [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ] ;}; then \
-        pecl install mongodb-1.9.2; \
-      else \
-        pecl install mongodb; \
-      fi; \
-      docker-php-ext-enable mongodb; \
-      php -m | grep -oiE '^mongodb$'; \
-    fi; \
-fi
-
-###########################################################################
-# Xhprof:
-###########################################################################
-
-ARG INSTALL_XHPROF=false
-
-RUN set -eux; \
-    if [ ${INSTALL_XHPROF} = true ]; then \
-      # Install the php xhprof extension
-      if   [ $(php -r "echo PHP_MAJOR_VERSION;") != 5 ]; then \
-        pecl install xhprof; \
-      else \
-        curl -L -o /tmp/xhprof.tar.gz "https://codeload.github.com/phacility/xhprof/tar.gz/master"; \
-        mkdir -p /tmp/xhprof; \
-        tar -C /tmp/xhprof -zxvf /tmp/xhprof.tar.gz --strip 1; \
-        ( \
-            cd /tmp/xhprof/extension; \
-            phpize; \
-            ./configure; \
-            make; \
-            make install; \
-        ); \
-        rm -r /tmp/xhprof; \
-        rm /tmp/xhprof.tar.gz; \
-      fi; \
-      docker-php-ext-enable xhprof; \
-      php -m | grep -q 'xhprof'; \
-    fi
-
 # if [ ${INSTALL_XHPROF_USE_TIDYWAYS} = true ]; then \
 #   https://github.com/tideways/php-xhprof-extension
 # fi

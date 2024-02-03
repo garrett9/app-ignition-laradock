@@ -221,18 +221,6 @@ RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
   fi \
 ;fi
 
-# Install MongoDB drivers:
-ARG INSTALL_MONGO=false
-RUN if [ ${INSTALL_MONGO} = true ]; then \
-      if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-        pecl install mongo; \
-        docker-php-ext-enable mongo; \
-      else \
-        pecl install mongodb; \
-        docker-php-ext-enable mongodb; \
-      fi; \
-    fi
-
 ###########################################################################
 # YAML: extension
 ###########################################################################
