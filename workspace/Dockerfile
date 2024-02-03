@@ -14,7 +14,7 @@
 
 ARG LARADOCK_PHP_VERSION
 ARG BASE_IMAGE_TAG_PREFIX=latest
-FROM appignition/php-workspace:1.5.0-php${LARADOCK_PHP_VERSION}
+FROM appignition/php-workspace:1.5.1-php${LARADOCK_PHP_VERSION}
 
 ARG LARADOCK_PHP_VERSION
 
