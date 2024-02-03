@@ -909,7 +909,7 @@ services:
       build: ./phpmyadmin
       environment:
         - PMA_USER=root
-        - PMA_HOST=mysql
+        - PMA_HOST=${PMA_HOST}
         - PMA_PASSWORD=${PMA_ROOT_PASSWORD}
         - PMA_ARBITRARY=1
         - MYSQL_USER=${PMA_USER}
@@ -920,8 +920,6 @@ services:
         - UPLOAD_LIMIT=${PMA_UPLOAD_LIMIT}
       ports:
         - "${PMA_PORT}:80"
-      depends_on:
-        - "${PMA_DB_ENGINE}"
       networks:
         - frontend
         - backend
