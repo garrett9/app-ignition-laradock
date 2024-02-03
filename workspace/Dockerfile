@@ -50,7 +50,7 @@ RUN set -xe; \
     apt-get update -yqq && \
     pecl channel-update pecl.php.net && \
     groupadd -g ${PGID} ignition && \
-    useradd -l -u ${PUID} -g ignition -m ignition -G docker_env && \
+    useradd -l -u ${PUID} -g ignition -m ignition && \
     usermod -p "*" ignition -s /bin/bash && \
     apt-get install -yqq \
       apt-utils \
