@@ -909,7 +909,7 @@ services:
       build: ./phpmyadmin
       environment:
         - PMA_USER=root
-        - PMA_HOST=mysql
+        - PMA_HOST=${PMA_HOST}
         - PMA_PASSWORD=${PMA_ROOT_PASSWORD}
         - PMA_ARBITRARY=1
         - MYSQL_USER=${PMA_USER}
