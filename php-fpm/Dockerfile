@@ -289,44 +289,6 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     && docker-php-ext-enable redis \
 ;fi
 
-###########################################################################
-# Swoole EXTENSION
-###########################################################################
-
-ARG INSTALL_SWOOLE=false
-RUN set -eux; \
-    if [ ${INSTALL_SWOOLE} = true ]; then \
-      # Install Php Swoole Extension
-      if   [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "50600" ]; then \
-        pecl install swoole-2.0.10; \
-      elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
-        pecl install swoole-4.3.5; \
-      elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70100" ]; then \
-        pecl install swoole-4.5.11; \
-      elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-        pecl install swoole-4.8.12; \
-      else \
-        pecl install swoole; \
-      fi; \
-      docker-php-ext-enable swoole; \
-      php -m | grep -q 'swoole'; \
-    fi
-
-###########################################################################
-# Taint EXTENSION
-###########################################################################
-
-ARG INSTALL_TAINT=false
-
-RUN if [ ${INSTALL_TAINT} = true ]; then \
-    # Install Php TAINT Extension
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-      pecl install taint && \
-      docker-php-ext-enable taint && \
-      php -m | grep -q 'taint'; \
-    fi \
-;fi
-
 # if [ ${INSTALL_XHPROF_USE_TIDYWAYS} = true ]; then \
 #   https://github.com/tideways/php-xhprof-extension
 # fi
