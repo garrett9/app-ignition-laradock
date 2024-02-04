@@ -63,7 +63,7 @@ server {
 
     location ~ \.php$ {
         fastcgi_max_temp_file_size 4m;
-        fastcgi_pass php-upstream;
+        fastcgi_pass php-fpm:9000;
 
         # Additional configs
         fastcgi_pass_header Set-Cookie;
