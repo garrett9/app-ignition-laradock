@@ -203,26 +203,6 @@ RUN if [ ${INSTALL_AUDIOWAVEFORM} = true ]; then \
   && make install \
   ;fi
 
-# Install AMQP:
-ARG INSTALL_AMQP=false
-
-RUN if [ ${INSTALL_AMQP} = true ]; then \
-  docker-php-ext-install sockets; \
-  apk --update add -q rabbitmq-c rabbitmq-c-dev && \
-  if [ ${LARADOCK_PHP_VERSION} = "7.3" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "7.2" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "7.1" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "7.0" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "5.6" ]; then \
-    printf "\n" | pecl install amqp-1.11.0; \
-  else \
-    printf "\n" | pecl install amqp; \
-  fi && \
-    docker-php-ext-enable amqp && \
-    apk del -q rabbitmq-c-dev; \
-    php -m | grep -oiE '^amqp$' \
-  ;fi
-
 # Install APCU ext
 ARG INSTALL_APCU=false
 

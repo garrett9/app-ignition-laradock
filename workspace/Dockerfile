@@ -399,28 +399,6 @@ RUN if [ ${INSTALL_XDEBUG} = false -a ${INSTALL_BLACKFIRE} = true ]; then \
 ;fi
 
 ###########################################################################
-# AMQP:
-###########################################################################
-
-ARG INSTALL_AMQP=false
-
-RUN if [ ${INSTALL_AMQP} = true ]; then \
-    apt-get install -yqq librabbitmq-dev && \
-    if [ ${LARADOCK_PHP_VERSION} = "7.3" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.2" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.1" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "7.0" ] \
-      || [ ${LARADOCK_PHP_VERSION} = "5.6" ]; then \
-      printf "\n" | pecl install amqp-1.11.0; \
-    else \
-      printf "\n" | pecl install amqp; \
-    fi && \
-    echo "extension=amqp.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/amqp.ini && \
-    ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/amqp.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/30-amqp.ini && \
-    php -m | grep -oiE '^amqp$' \
-;fi
-
-###########################################################################
 # PHP REDIS EXTENSION
 ###########################################################################
 
