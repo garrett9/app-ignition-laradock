@@ -352,8 +352,6 @@ services:
       ports:
         - "${NGINX_HOST_HTTP_PORT}:80"
         - "${NGINX_HOST_HTTPS_PORT}:443"
-      depends_on:
-        - php-fpm
       networks:
         frontend:
           aliases:
@@ -417,8 +415,6 @@ services:
       ports:
         - "${APACHE_HOST_HTTP_PORT}:80"
         - "${APACHE_HOST_HTTPS_PORT}:443"
-      depends_on:
-        - php-fpm
       networks:
         frontend:
           aliases:
@@ -922,8 +918,6 @@ services:
           - ADMINER_DEFAULT_DB_DRIVER=${ADMINER_DEFAULT_DB_DRIVER}
       ports:
         - "${ADM_PORT}:8080"
-      depends_on:
-        - php-fpm
       networks:
         - frontend
         - backend
