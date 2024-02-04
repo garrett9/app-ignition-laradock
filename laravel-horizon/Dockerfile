@@ -113,12 +113,8 @@ RUN set -eux; \
     php -m | grep -q 'imagick'; \
   fi
 
-#Install GMP package:
-ARG INSTALL_GMP=false
-RUN if [ ${INSTALL_GMP} = true ]; then \
-   apk add --update --no-cache gmp gmp-dev; \
-   docker-php-ext-install gmp \
-;fi
+RUN apk add --update --no-cache gmp gmp-dev; \
+   docker-php-ext-install gmp
 
 #Install BCMath package:
 ARG INSTALL_BCMATH=false

@@ -218,7 +218,6 @@ RUN if [ ${INSTALL_WP_CLI} = true ]; then \
 USER root
 
 ARG INSTALL_BZ2=false
-ARG INSTALL_GMP=false
 ARG INSTALL_GNUPG=false
 ARG INSTALL_SSH2=false
 ARG INSTALL_SOAP=false
@@ -235,10 +234,7 @@ RUN set -eux; \
     ###########################################################################
     # GMP (GNU Multiple Precision):
     ###########################################################################
-    if [ ${INSTALL_GMP} = true ]; then \
-      # Install the PHP GMP extension
-      apt-get -yqq install php${LARADOCK_PHP_VERSION}-gmp; \
-    fi; \
+    apt-get -yqq install php${LARADOCK_PHP_VERSION}-gmp; \
     ###########################################################################
     # GnuPG:
     ###########################################################################
