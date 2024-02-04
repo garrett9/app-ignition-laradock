@@ -191,15 +191,6 @@ COPY ./crontab /etc/cron.d
 RUN chmod -R 644 /etc/cron.d
 
 ###########################################################################
-# Certificate Authorities
-###########################################################################
-
-USER root
-
-COPY ./ca-certificates/* /usr/local/share/ca-certificates/
-RUN update-ca-certificates
-
-###########################################################################
 # WP CLI:
 ###########################################################################
 
@@ -218,7 +209,6 @@ RUN if [ ${INSTALL_WP_CLI} = true ]; then \
 USER root
 
 ARG INSTALL_BZ2=false
-ARG INSTALL_GMP=false
 ARG INSTALL_GNUPG=false
 ARG INSTALL_SSH2=false
 ARG INSTALL_SOAP=false
@@ -235,10 +225,7 @@ RUN set -eux; \
     ###########################################################################
     # GMP (GNU Multiple Precision):
     ###########################################################################
-    if [ ${INSTALL_GMP} = true ]; then \
-      # Install the PHP GMP extension
-      apt-get -yqq install php${LARADOCK_PHP_VERSION}-gmp; \
-    fi; \
+    apt-get -yqq install php${LARADOCK_PHP_VERSION}-gmp; \
     ###########################################################################
     # GnuPG:
     ###########################################################################
@@ -410,33 +397,6 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
 ;fi
 
 ###########################################################################
-# Swoole EXTENSION
-###########################################################################
-
-ARG INSTALL_SWOOLE=false
-
-RUN set -eux; \
-    if [ ${INSTALL_SWOOLE} = true ]; then \
-      # Install Php Swoole Extension
-      if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-        echo '' | pecl -q install swoole-2.0.10; \
-      elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ]; then \
-        echo '' | pecl -q install swoole-4.3.5; \
-      elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ]; then \
-        echo '' | pecl -q install swoole-4.5.11; \
-      elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-        echo '' | pecl -q install swoole-4.8.12; \
-      else \
-        echo '' | pecl -q install swoole; \
-      fi; \
-      echo "extension=swoole.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/swoole.ini; \
-      ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/swoole.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-swoole.ini; \
-      php -m | grep -q 'swoole'; \
-    fi
-
-
-
-###########################################################################
 # xlswriter:
 ###########################################################################
 
@@ -453,22 +413,6 @@ RUN set -eux; \
         echo "PHP Extension for xlswriter is not supported for PHP 5.0"; \
       fi \
     ;fi
-
-###########################################################################
-# Taint EXTENSION
-###########################################################################
-
-ARG INSTALL_TAINT=false
-
-RUN if [ "${INSTALL_TAINT}" = true ]; then \
-    # Install Php TAINT Extension
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-      pecl install taint && \
-      echo "extension=taint.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/taint.ini && \
-      ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/taint.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/20-taint.ini && \
-      php -m | grep -q 'taint'; \
-    fi \
-;fi
 
 ###########################################################################
 # Libpng16 EXTENSION
