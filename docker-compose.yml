@@ -144,7 +144,6 @@ services:
         - ~/.gitconfig:/home/ignition/.gitconfig
         - ~/.laravel-vapor:/home/ignition/.laravel-vapor
         - ~/.npmrc:/home/ignition/.npmrc
-        - ~/.npm:/home/ignition/.npm
       extra_hosts:
         - "dockerhost:${DOCKER_HOST_IP}"
       ports:
