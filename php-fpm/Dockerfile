@@ -332,58 +332,6 @@ RUN if [ ${INSTALL_TAINT} = true ]; then \
     fi \
 ;fi
 
-###########################################################################
-# MongoDB:
-###########################################################################
-
-ARG INSTALL_MONGO=false
-
-RUN if [ ${INSTALL_MONGO} = true ]; then \
-    # Install the mongodb extension
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      pecl install mongo; \
-      docker-php-ext-enable mongo; \
-      php -m | grep -oiE '^mongo$'; \
-    else \
-      if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && { [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ] || [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ] ;}; then \
-        pecl install mongodb-1.9.2; \
-      else \
-        pecl install mongodb; \
-      fi; \
-      docker-php-ext-enable mongodb; \
-      php -m | grep -oiE '^mongodb$'; \
-    fi; \
-fi
-
-###########################################################################
-# Xhprof:
-###########################################################################
-
-ARG INSTALL_XHPROF=false
-
-RUN set -eux; \
-    if [ ${INSTALL_XHPROF} = true ]; then \
-      # Install the php xhprof extension
-      if   [ $(php -r "echo PHP_MAJOR_VERSION;") != 5 ]; then \
-        pecl install xhprof; \
-      else \
-        curl -L -o /tmp/xhprof.tar.gz "https://codeload.github.com/phacility/xhprof/tar.gz/master"; \
-        mkdir -p /tmp/xhprof; \
-        tar -C /tmp/xhprof -zxvf /tmp/xhprof.tar.gz --strip 1; \
-        ( \
-            cd /tmp/xhprof/extension; \
-            phpize; \
-            ./configure; \
-            make; \
-            make install; \
-        ); \
-        rm -r /tmp/xhprof; \
-        rm /tmp/xhprof.tar.gz; \
-      fi; \
-      docker-php-ext-enable xhprof; \
-      php -m | grep -q 'xhprof'; \
-    fi
-
 # if [ ${INSTALL_XHPROF_USE_TIDYWAYS} = true ]; then \
 #   https://github.com/tideways/php-xhprof-extension
 # fi
@@ -393,64 +341,6 @@ RUN set -eux; \
 # RUN if [ ${INSTALL_XHPROF} = false ]; then \
 #     rm /usr/local/etc/php/conf.d/xhprof.ini \
 # ;fi
-
-###########################################################################
-# AMQP:
-###########################################################################
-
-ARG INSTALL_AMQP=false
-
-RUN set -eux; \
-    if [ ${INSTALL_AMQP} = true ]; then \
-      # # Install the amqp extension
-      apt-get -yqq install librabbitmq-dev; \
-      if [ ${LARADOCK_PHP_VERSION} = "7.3" ] \
-        || [ ${LARADOCK_PHP_VERSION} = "7.2" ] \
-        || [ ${LARADOCK_PHP_VERSION} = "7.1" ] \
-        || [ ${LARADOCK_PHP_VERSION} = "7.0" ] \
-        || [ ${LARADOCK_PHP_VERSION} = "5.6" ]; then \
-        pecl install amqp-1.11.0; \
-      else \
-        pecl install amqp; \
-      fi; \
-      docker-php-ext-enable amqp; \
-      php -m | grep -oiE '^amqp$'; \
-    fi
-
-###########################################################################
-# CASSANDRA:
-###########################################################################
-
-ARG INSTALL_CASSANDRA=false
-
-RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-      echo "PHP Driver for Cassandra is not supported for PHP 8.0."; \
-    else \
-      apt-get install libgmp-dev -yqq && \
-      curl https://downloads.datastax.com/cpp-driver/ubuntu/18.04/dependencies/libuv/v1.35.0/libuv1-dev_1.35.0-1_amd64.deb -o libuv1-dev.deb && \
-      curl https://downloads.datastax.com/cpp-driver/ubuntu/18.04/dependencies/libuv/v1.35.0/libuv1_1.35.0-1_amd64.deb -o libuv1.deb && \
-      curl https://downloads.datastax.com/cpp-driver/ubuntu/18.04/cassandra/v2.16.0/cassandra-cpp-driver-dev_2.16.0-1_amd64.deb -o cassandra-cpp-driver-dev.deb && \
-      curl https://downloads.datastax.com/cpp-driver/ubuntu/18.04/cassandra/v2.16.0/cassandra-cpp-driver_2.16.0-1_amd64.deb -o cassandra-cpp-driver.deb && \
-      dpkg -i libuv1.deb && \
-      dpkg -i libuv1-dev.deb && \
-      dpkg -i cassandra-cpp-driver.deb && \
-      dpkg -i cassandra-cpp-driver-dev.deb && \
-      rm libuv1.deb libuv1-dev.deb cassandra-cpp-driver-dev.deb cassandra-cpp-driver.deb && \
-      cd /usr/src && \
-      git clone https://github.com/datastax/php-driver.git && \
-      cd /usr/src/php-driver/ext && \
-      phpize && \
-      mkdir /usr/src/php-driver/build && \
-      cd /usr/src/php-driver/build && \
-      ../ext/configure > /dev/null && \
-      make clean > /dev/null && \
-      make > /dev/null 2>&1 && \
-      make install && \
-      echo "extension=cassandra.so" >> /etc/php/${LARADOCK_PHP_VERSION}/mods-available/cassandra.ini && \
-      ln -s /etc/php/${LARADOCK_PHP_VERSION}/mods-available/cassandra.ini /etc/php/${LARADOCK_PHP_VERSION}/cli/conf.d/30-cassandra.ini; \
-    fi \
-;fi
 
 ###########################################################################
 # xlswriter:

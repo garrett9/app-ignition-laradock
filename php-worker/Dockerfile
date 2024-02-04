@@ -144,24 +144,6 @@ RUN if [ ${INSTALL_SOAP} = true ]; then \
   docker-php-ext-install soap \
   ;fi
 
-# Install MongoDB drivers:
-ARG INSTALL_MONGO=false
-RUN if [ ${INSTALL_MONGO} = true ]; then \
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      pecl install mongo; \
-      docker-php-ext-enable mongo; \
-      php -m | grep -oiE '^mongo$'; \
-    else \
-      if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && { [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ] || [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ] ;}; then \
-        pecl install mongodb-1.9.2; \
-      else \
-        pecl install mongodb; \
-      fi; \
-      docker-php-ext-enable mongodb; \
-      php -m | grep -oiE '^mongodb$'; \
-    fi; \
-  fi
-
 # Install PostgreSQL drivers:
 ARG INSTALL_PGSQL=false
 RUN if [ ${INSTALL_PGSQL} = true ]; then \
@@ -219,49 +201,6 @@ RUN if [ ${INSTALL_AUDIOWAVEFORM} = true ]; then \
   && cmake .. \
   && make \
   && make install \
-  ;fi
-
-# Install AMQP:
-ARG INSTALL_AMQP=false
-
-RUN if [ ${INSTALL_AMQP} = true ]; then \
-  docker-php-ext-install sockets; \
-  apk --update add -q rabbitmq-c rabbitmq-c-dev && \
-  if [ ${LARADOCK_PHP_VERSION} = "7.3" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "7.2" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "7.1" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "7.0" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "5.6" ]; then \
-    printf "\n" | pecl install amqp-1.11.0; \
-  else \
-    printf "\n" | pecl install amqp; \
-  fi && \
-    docker-php-ext-enable amqp && \
-    apk del -q rabbitmq-c-dev; \
-    php -m | grep -oiE '^amqp$' \
-  ;fi
-
-# Install Cassandra drivers:
-ARG INSTALL_CASSANDRA=false
-RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  echo "PHP Driver for Cassandra is not supported for PHP 8.0."; \
-  else \
-  apk add --update --no-cache cassandra-cpp-driver libuv gmp \
-  && apk add --update --no-cache cassandra-cpp-driver-dev gmp-dev --virtual .build-sec \
-  && cd /usr/src \
-  && git clone https://github.com/datastax/php-driver.git \
-  && cd php-driver/ext \
-  && phpize \
-  && mkdir -p /usr/src/php-driver/build \
-  && cd /usr/src/php-driver/build \
-  && ../ext/configure > /dev/null \
-  && make clean > /dev/null \
-  && make > /dev/null 2>&1 \
-  && make install \
-  && docker-php-ext-enable cassandra \
-  && apk del .build-sec; \
-  fi \
   ;fi
 
 # Install APCU ext
