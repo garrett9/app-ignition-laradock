@@ -39,6 +39,9 @@ ENV PUID ${PUID}
 ARG PGID=1000
 ENV PGID ${PGID}
 
+RUN groupmod -g 1001 node \
+  && usermod -u 1001 -g 1001 node
+
 RUN set -xe; \
     apt-get update -yqq && \
     groupadd -g ${PGID} ignition && \
@@ -55,9 +58,6 @@ RUN set -xe; \
       nano \
       postgresql-client \
       default-mysql-client \
-      libedit-dev \
-      libssl-dev \
-      libxml2-dev \
       xz-utils \
       pkg-config \
       tree
