@@ -126,11 +126,8 @@ RUN set -eux; \
   fi
 
 #Install GMP package:
-ARG INSTALL_GMP=false
-RUN if [ ${INSTALL_GMP} = true ]; then \
-  apk add --update --no-cache gmp gmp-dev \
-  && docker-php-ext-install gmp \
-  ;fi
+RUN apk add --update --no-cache gmp gmp-dev \
+  && docker-php-ext-install gmp
 
 #Install BCMath package:
 ARG INSTALL_BCMATH=false
@@ -143,24 +140,6 @@ ARG INSTALL_SOAP=false
 RUN if [ ${INSTALL_SOAP} = true ]; then \
   docker-php-ext-install soap \
   ;fi
-
-# Install MongoDB drivers:
-ARG INSTALL_MONGO=false
-RUN if [ ${INSTALL_MONGO} = true ]; then \
-    if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-      pecl install mongo; \
-      docker-php-ext-enable mongo; \
-      php -m | grep -oiE '^mongo$'; \
-    else \
-      if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ] && { [ $(php -r "echo PHP_MINOR_VERSION;") = "0" ] || [ $(php -r "echo PHP_MINOR_VERSION;") = "1" ] ;}; then \
-        pecl install mongodb-1.9.2; \
-      else \
-        pecl install mongodb; \
-      fi; \
-      docker-php-ext-enable mongodb; \
-      php -m | grep -oiE '^mongodb$'; \
-    fi; \
-  fi
 
 # Install PostgreSQL drivers:
 ARG INSTALL_PGSQL=false
@@ -215,49 +194,6 @@ RUN if [ ${INSTALL_AUDIOWAVEFORM} = true ]; then \
   && make install \
   ;fi
 
-# Install AMQP:
-ARG INSTALL_AMQP=false
-
-RUN if [ ${INSTALL_AMQP} = true ]; then \
-  docker-php-ext-install sockets; \
-  apk --update add -q rabbitmq-c rabbitmq-c-dev && \
-  if [ ${LARADOCK_PHP_VERSION} = "7.3" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "7.2" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "7.1" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "7.0" ] \
-    || [ ${LARADOCK_PHP_VERSION} = "5.6" ]; then \
-    printf "\n" | pecl install amqp-1.11.0; \
-  else \
-    printf "\n" | pecl install amqp; \
-  fi && \
-    docker-php-ext-enable amqp && \
-    apk del -q rabbitmq-c-dev; \
-    php -m | grep -oiE '^amqp$' \
-  ;fi
-
-# Install Cassandra drivers:
-ARG INSTALL_CASSANDRA=false
-RUN if [ ${INSTALL_CASSANDRA} = true ]; then \
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "8" ]; then \
-  echo "PHP Driver for Cassandra is not supported for PHP 8.0."; \
-  else \
-  apk add --update --no-cache cassandra-cpp-driver libuv gmp \
-  && apk add --update --no-cache cassandra-cpp-driver-dev gmp-dev --virtual .build-sec \
-  && cd /usr/src \
-  && git clone https://github.com/datastax/php-driver.git \
-  && cd php-driver/ext \
-  && phpize \
-  && mkdir -p /usr/src/php-driver/build \
-  && cd /usr/src/php-driver/build \
-  && ../ext/configure > /dev/null \
-  && make clean > /dev/null \
-  && make > /dev/null 2>&1 \
-  && make install \
-  && docker-php-ext-enable cassandra \
-  && apk del .build-sec; \
-  fi \
-  ;fi
-
 # Install APCU ext
 ARG INSTALL_APCU=false
 
@@ -289,30 +225,6 @@ RUN if [ ${INSTALL_REDIS} = true ]; then \
   ;fi
 
 ###########################################################################
-# Swoole EXTENSION
-###########################################################################
-
-ARG INSTALL_SWOOLE=false
-
-RUN set -eux; \
-  if [ ${INSTALL_SWOOLE} = true ]; then \
-    # Install Php Swoole Extension
-    if   [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "50600" ]; then \
-      pecl install swoole-2.0.10; \
-    elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70000" ]; then \
-      pecl install swoole-4.3.5; \
-    elif [ $(php -r "echo PHP_VERSION_ID - PHP_RELEASE_VERSION;") = "70100" ]; then \
-      pecl install swoole-4.5.11; \
-    elif [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-      pecl install swoole-4.8.12; \
-    else \
-      pecl install swoole; \
-    fi; \
-    docker-php-ext-enable swoole; \
-    php -m | grep -oiE '^swoole$'; \
-  fi
-
-###########################################################################
 # xlswriter:
 ###########################################################################
 
@@ -329,23 +241,6 @@ RUN set -eux; \
           echo "PHP Extension for xlswriter is not supported for PHP 5.0"; \
       fi \
     ;fi
-
-###########################################################################
-# Taint EXTENSION
-###########################################################################
-
-ARG INSTALL_TAINT=false
-
-RUN if [ ${INSTALL_TAINT} = true ]; then \
-  # Install Php TAINT Extension
-  if [ $(php -r "echo PHP_MAJOR_VERSION;") = "7" ]; then \
-  pecl install taint; \
-  docker-php-ext-enable taint; \
-  php -m | grep -q 'taint'; \
-  else \
-  echo 'taint not Support'; \
-  fi \
-  ;fi
 
 ###########################################################################
 # Imap EXTENSION

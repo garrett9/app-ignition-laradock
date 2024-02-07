@@ -21,8 +21,10 @@ server {
     }
 
     location ~ \.php$ {
+        resolver 127.0.0.11;
         try_files $uri /index.php =404;
-        fastcgi_pass php-upstream;
+        set $upstream php-fpm:9000;
+        fastcgi_pass $upstream; 
         fastcgi_index index.php;
         fastcgi_buffers 16 16k;
         fastcgi_buffer_size 32k;
@@ -30,6 +32,7 @@ server {
         #fixes timeouts
         fastcgi_read_timeout 600;
         include fastcgi_params;
+        proxy_intercept_errors on;
     }
 
     location ~ /\.ht {
