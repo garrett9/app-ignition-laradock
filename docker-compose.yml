@@ -173,7 +173,7 @@ services:
       extra_hosts:
         - "dockerhost:${DOCKER_HOST_IP}"
       ports:
-        - "${NODE_WORKSPACE_VITE_PORT}:5173"
+        - "${NODE_WORKSPACE_FRONTEND_PORT}:3000"
       tty: true
       networks:
         - frontend
