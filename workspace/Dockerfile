@@ -48,6 +48,7 @@ ENV PGID ${PGID}
 # always run apt update when start and after add new source list, then clean up at end.
 RUN set -xe; \
     apt-get update -yqq && \
+    apt upgrade -yqq && \
     pecl channel-update pecl.php.net && \
     groupadd -g ${PGID} ignition && \
     useradd -l -u ${PUID} -g ignition -m ignition && \
