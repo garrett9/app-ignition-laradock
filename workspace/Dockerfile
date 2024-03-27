@@ -48,6 +48,7 @@ ENV PGID ${PGID}
 # always run apt update when start and after add new source list, then clean up at end.
 RUN set -xe; \
     apt-get update -yqq && \
+    apt upgrade -yqq && \
     pecl channel-update pecl.php.net && \
     groupadd -g ${PGID} ignition && \
     useradd -l -u ${PUID} -g ignition -m ignition && \
@@ -65,7 +66,7 @@ RUN set -xe; \
       # base image (https://github.com/Laradock/workspace).
       #
       # next lines are here because there is no auto build on dockerhub see https://github.com/laradock/laradock/pull/1903#issuecomment-463142846
-      libzip-dev zip unzip \
+      libzip-dev zip unzip default-mysql-client \
       # Install the zip extension
       php${LARADOCK_PHP_VERSION}-zip \
       # nasm
@@ -756,18 +757,12 @@ RUN if [ ${INSTALL_APCU} = true ]; then \
 ###########################################################################
 USER root
 
-ARG INSTALL_MYSQL_CLIENT=false
+
 ARG INSTALL_PING=false
 ARG INSTALL_SSHPASS=false
 ARG INSTALL_DOCKER_CLIENT=false
 
 RUN set -eux; \
-  ###########################################################################
-  # MySQL Client:
-  ###########################################################################
-  if [ ${INSTALL_MYSQL_CLIENT} = true ]; then \
-    apt-get -yqq install mysql-client; \
-  fi; \
   ###########################################################################
   # ping:
   ###########################################################################
