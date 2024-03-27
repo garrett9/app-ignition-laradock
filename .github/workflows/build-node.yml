@@ -16,7 +16,7 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-  build-php:
+  build-node:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -38,7 +38,7 @@ jobs:
           sed -i -- 's/CHANGE_SOURCE=true/CHANGE_SOURCE=false/g' .env
           docker compose build ${{ matrix.service }}
           docker compose up -d --no-deps -- ${{ matrix.service }}
-          docker compose exec -T -- ${{ matrix.service }} php -m
+          docker compose exec -T -- ${{ matrix.service }} node -v
           docker compose down
       - name: List Images
         run: docker image inspect --format "{{.ID}} {{.RepoTags}} {{.Architecture}}" $(docker image ls -q)
